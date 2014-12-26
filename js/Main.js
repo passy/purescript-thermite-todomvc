@@ -881,6 +881,15 @@ var RemoveItem = (function () {
     };
     return RemoveItem;
 })();
+var SetEditText = (function () {
+    function SetEditText(value0) {
+        this.value0 = value0;
+    };
+    SetEditText.create = function (value0) {
+        return new SetEditText(value0);
+    };
+    return SetEditText;
+})();
 var SetCompleted = (function () {
     function SetCompleted(value0, value1) {
         this.value0 = value0;
@@ -921,65 +930,77 @@ var showFilter = function (_0) {
     };
     throw new Error("Failed pattern match");
 };
-var setCompleted = function (_4) {
-    return function (_5) {
-        return new Item(_5.value0, _4);
+var setCompleted = function (_3) {
+    return function (_4) {
+        return new Item(_4.value0, _3);
     };
 };
-var performAction = function (_9) {
-    return function (_10) {
-        return function (_11) {
-            return function (_12) {
-                if (_11 instanceof NewItem) {
-                    return _12(new State((function () {
-                        var _26 = {};
-                        for (var _27 in _9.value0) {
-                            if (_9.value0.hasOwnProperty(_27)) {
-                                _26[_27] = _9.value0[_27];
+var performAction = function (_8) {
+    return function (_9) {
+        return function (_10) {
+            return function (_11) {
+                if (_10 instanceof NewItem) {
+                    return _11(new State((function () {
+                        var _25 = {};
+                        for (var _26 in _8.value0) {
+                            if (_8.value0.hasOwnProperty(_26)) {
+                                _25[_26] = _8.value0[_26];
                             };
                         };
-                        _26.items = Prelude["++"](Data_Array.semigroupArray)(_9.value0.items)([ new Item(_11.value0, false) ]);
-                        _26.newItemName = "";
-                        return _26;
+                        _25.items = Prelude["++"](Data_Array.semigroupArray)(_8.value0.items)([ new Item(_10.value0, false) ]);
+                        _25.editText = "";
+                        return _25;
                     })()));
                 };
-                if (_11 instanceof RemoveItem) {
-                    return _12(new State((function () {
-                        var _30 = {};
-                        for (var _31 in _9.value0) {
-                            if (_9.value0.hasOwnProperty(_31)) {
-                                _30[_31] = _9.value0[_31];
+                if (_10 instanceof RemoveItem) {
+                    return _11(new State((function () {
+                        var _29 = {};
+                        for (var _30 in _8.value0) {
+                            if (_8.value0.hasOwnProperty(_30)) {
+                                _29[_30] = _8.value0[_30];
                             };
                         };
-                        _30.items = Data_Array.deleteAt(_11.value0)(1)(_9.value0.items);
-                        return _30;
+                        _29.items = Data_Array.deleteAt(_10.value0)(1)(_8.value0.items);
+                        return _29;
                     })()));
                 };
-                if (_11 instanceof SetCompleted) {
-                    return _12(new State((function () {
-                        var _34 = {};
-                        for (var _35 in _9.value0) {
-                            if (_9.value0.hasOwnProperty(_35)) {
-                                _34[_35] = _9.value0[_35];
+                if (_10 instanceof SetEditText) {
+                    return _11(new State((function () {
+                        var _33 = {};
+                        for (var _34 in _8.value0) {
+                            if (_8.value0.hasOwnProperty(_34)) {
+                                _33[_34] = _8.value0[_34];
                             };
                         };
-                        _34.items = Data_Array.updateAt(_11.value0)(setCompleted(_11.value1)(_9.value0.items[_11.value0]))(_9.value0.items);
-                        return _34;
+                        _33.editText = _10.value0;
+                        return _33;
                     })()));
                 };
-                if (_11 instanceof SetFilter) {
-                    return _12(new State((function () {
-                        var _39 = {};
-                        for (var _40 in _9.value0) {
-                            if (_9.value0.hasOwnProperty(_40)) {
-                                _39[_40] = _9.value0[_40];
+                if (_10 instanceof SetCompleted) {
+                    return _11(new State((function () {
+                        var _37 = {};
+                        for (var _38 in _8.value0) {
+                            if (_8.value0.hasOwnProperty(_38)) {
+                                _37[_38] = _8.value0[_38];
                             };
                         };
-                        _39.filter = _11.value0;
-                        return _39;
+                        _37.items = Data_Array.updateAt(_10.value0)(setCompleted(_10.value1)(_8.value0.items[_10.value0]))(_8.value0.items);
+                        return _37;
                     })()));
                 };
-                if (_11 instanceof DoNothing) {
+                if (_10 instanceof SetFilter) {
+                    return _11(new State((function () {
+                        var _42 = {};
+                        for (var _43 in _8.value0) {
+                            if (_8.value0.hasOwnProperty(_43)) {
+                                _42[_43] = _8.value0[_43];
+                            };
+                        };
+                        _42.filter = _10.value0;
+                        return _42;
+                    })()));
+                };
+                if (_10 instanceof DoNothing) {
                     return Prelude["return"](Control_Monad_Eff.monadEff)(Prelude.unit);
                 };
                 throw new Error("Failed pattern match");
@@ -989,12 +1010,16 @@ var performAction = function (_9) {
 };
 var initialState = new State({
     items: [  ], 
-    newItemName: "", 
+    editText: "", 
     filter: All.value
 });
-var handleKeyPress = function (_1) {
-    if (getKeyCode(_1) === 13) {
-        return NewItem.create(getValue(_1));
+var handleKeyPress = function (e) {
+    var _46 = getKeyCode(e);
+    if (_46 === 13) {
+        return NewItem.create(getValue(e));
+    };
+    if (_46 === 27) {
+        return new SetEditText("");
     };
     return DoNothing.value;
 };
@@ -1003,70 +1028,73 @@ var handleCheckEvent = function (index) {
         return new SetCompleted(index, getChecked(e));
     };
 };
+var handleChangeEvent = function (e) {
+    return new SetEditText(getValue(e));
+};
 var eqFilter = new Prelude.Eq(function (x) {
     return function (y) {
         return !Prelude["=="](eqFilter)(x)(y);
     };
-}, function (_13) {
-    return function (_14) {
-        if (_13 instanceof All && _14 instanceof All) {
+}, function (_12) {
+    return function (_13) {
+        if (_12 instanceof All && _13 instanceof All) {
             return true;
         };
-        if (_13 instanceof Active && _14 instanceof Active) {
+        if (_12 instanceof Active && _13 instanceof Active) {
             return true;
         };
-        if (_13 instanceof Completed && _14 instanceof Completed) {
+        if (_12 instanceof Completed && _13 instanceof Completed) {
             return true;
         };
         return false;
     };
 });
-var applyFilter = function (_2) {
-    return function (_3) {
-        if (_2 instanceof All) {
+var applyFilter = function (_1) {
+    return function (_2) {
+        if (_1 instanceof All) {
             return true;
         };
-        if (_2 instanceof Active) {
-            return !_3.value1;
+        if (_1 instanceof Active) {
+            return !_2.value1;
         };
-        if (_2 instanceof Completed) {
-            return _3.value1;
+        if (_1 instanceof Completed) {
+            return _2.value1;
         };
         throw new Error("Failed pattern match");
     };
 };
-var render = function (_6) {
-    return function (_7) {
-        return function (_8) {
+var render = function (_5) {
+    return function (_6) {
+        return function (_7) {
             var title = Thermite_Html_Elements.h1([ Thermite_Html_Attributes.className("title") ])([ Thermite_Html.text("todos") ]);
-            var newItem = Thermite_Html_Elements.li([ Thermite_Html_Attributes.className("newItem") ])([ Thermite_Html_Elements.input([ Thermite_Html_Attributes.placeholder("Create a new task"), Thermite_Events.onKeyUp(_6)(handleKeyPress) ])([  ]) ]);
-            var item = function (_15) {
-                return function (_16) {
+            var newItem = Thermite_Html_Elements.li([ Thermite_Html_Attributes.className("newItem") ])([ Thermite_Html_Elements.input([ Thermite_Html_Attributes.placeholder("Create a new task"), Thermite_Html_Attributes.value(_6.value0.editText), Thermite_Events.onKeyUp(_5)(handleKeyPress), Thermite_Events.onChange(_5)(handleChangeEvent) ])([  ]) ]);
+            var item = function (_14) {
+                return function (_15) {
                     return Thermite_Html_Elements["li'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("checkbox"), Thermite_Html_Attributes.className("completed"), Thermite_Html_Attributes.checked((function () {
-                        if (_15.value1) {
+                        if (_14.value1) {
                             return "checked";
                         };
-                        if (!_15.value1) {
+                        if (!_14.value1) {
                             return "";
                         };
                         throw new Error("Failed pattern match");
-                    })()), Thermite_Html_Attributes.title("Mark as completed"), Thermite_Events.onChange(_6)(handleCheckEvent(_16)) ])([  ]), Thermite_Html_Elements.span([ Thermite_Html_Attributes.className("description") ])([ Thermite_Html.text(_15.value0) ]), Thermite_Html_Elements.button([ Thermite_Html_Attributes.className("complete"), Thermite_Html_Attributes.title("Remove item"), Thermite_Events.onClick(_6)(function (_) {
-                        return new RemoveItem(_16);
+                    })()), Thermite_Html_Attributes.title("Mark as completed"), Thermite_Events.onChange(_5)(handleCheckEvent(_15)) ])([  ]), Thermite_Html_Elements.span([ Thermite_Html_Attributes.className("description") ])([ Thermite_Html.text(_14.value0) ]), Thermite_Html_Elements.button([ Thermite_Html_Attributes.className("complete"), Thermite_Html_Attributes.title("Remove item"), Thermite_Events.onClick(_5)(function (_) {
+                        return new RemoveItem(_15);
                     }) ])([ Thermite_Html.text("\u2716") ]) ]);
                 };
             };
-            var items = Thermite_Html_Elements.ul([ Thermite_Html_Attributes.className("items") ])(Prelude[":"](newItem)(Data_Array.zipWith(item)(Data_Array.filter(applyFilter(_7.value0.filter))(_7.value0.items))(Data_Array[".."](0)(Data_Array.length(_7.value0.items)))));
+            var items = Thermite_Html_Elements.ul([ Thermite_Html_Attributes.className("items") ])(Prelude[":"](newItem)(Data_Array.zipWith(item)(Data_Array.filter(applyFilter(_6.value0.filter))(_6.value0.items))(Data_Array[".."](0)(Data_Array.length(_6.value0.items)))));
             var filter_ = function (f) {
                 return Thermite_Html_Elements.li([  ])([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("#"), Thermite_Html_Attributes.className((function () {
-                    var _60 = Prelude["=="](eqFilter)(f)(_7.value0.filter);
-                    if (_60) {
+                    var _63 = Prelude["=="](eqFilter)(f)(_6.value0.filter);
+                    if (_63) {
                         return "selected";
                     };
-                    if (!_60) {
+                    if (!_63) {
                         return "";
                     };
                     throw new Error("Failed pattern match");
-                })()), Thermite_Events.onClick(_6)(function (_) {
+                })()), Thermite_Events.onClick(_5)(function (_) {
                     return new SetFilter(f);
                 }) ])([ Thermite_Html.text(showFilter(f)) ]) ]);
             };

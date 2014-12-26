@@ -14,6 +14,7 @@ type Index = Number
 data Action 
   = NewItem String
   | RemoveItem Index
+  | SetEditText String
   | SetCompleted Index Boolean
   | SetFilter Filter
   | DoNothing
@@ -36,14 +37,14 @@ showFilter Completed = "Completed"
 
 data State = State 
   { items :: [Item] 
-  , newItemName :: String
+  , editText :: String
   , filter :: Filter
   }
 
 foreign import getValue
   "function getValue(e) {\
   \  return e.target.value;\
-  \}" :: T.KeyboardEvent -> String
+  \}" :: forall event. event -> String
 
 foreign import getChecked
   "function getChecked(e) {\
@@ -56,14 +57,19 @@ foreign import getKeyCode
   \}" :: T.KeyboardEvent -> Number
 
 handleKeyPress :: T.KeyboardEvent -> Action
-handleKeyPress e | getKeyCode e == 13 = NewItem $ getValue e
-handleKeyPress _ = DoNothing
+handleKeyPress e = case getKeyCode e of
+                     13 -> NewItem $ getValue e
+                     27 -> SetEditText ""
+                     _  -> DoNothing
+
+handleChangeEvent :: T.FormEvent -> Action
+handleChangeEvent e = SetEditText (getValue e)
 
 handleCheckEvent :: Index -> T.FormEvent -> Action
 handleCheckEvent index e = SetCompleted index (getChecked e)
 
 initialState :: State
-initialState = State { items: [], newItemName: "", filter: All }
+initialState = State { items: [], editText: "", filter: All }
 
 applyFilter :: Filter -> Item -> Boolean
 applyFilter All       _ = true
@@ -86,7 +92,9 @@ render ctx (State st) _ =
   newItem :: T.Html _
   newItem = T.li [ A.className "newItem" ]
                  [ T.input [ A.placeholder "Create a new task" 
+                           , A.value st.editText
                            , T.onKeyUp ctx handleKeyPress
+                           , T.onChange ctx handleChangeEvent
                            ] []
                  ]
 
@@ -116,15 +124,17 @@ render ctx (State st) _ =
                       ]
 
 performAction :: T.PerformAction State _ Action _ 
-performAction (State st) _ (NewItem s)    k = 
-  k (State (st { items = st.items ++ [ Item s false ], newItemName = "" }))
-performAction (State st) _ (RemoveItem i) k = 
+performAction (State st) _ (NewItem s)        k = 
+  k (State (st { items = st.items ++ [ Item s false ], editText = "" }))
+performAction (State st) _ (RemoveItem i)     k = 
   k (State (st { items = deleteAt i 1 st.items }))
-performAction (State st) _ (SetCompleted i c)  k = 
+performAction (State st) _ (SetEditText s)    k = 
+  k (State (st { editText = s }))
+performAction (State st) _ (SetCompleted i c) k = 
   k (State (st { items = updateAt i (setCompleted c (st.items `unsafeIndex` i)) st.items }))
-performAction (State st) _ (SetFilter f)  k = 
+performAction (State st) _ (SetFilter f)      k = 
   k (State (st { filter = f }))
-performAction st         _ DoNothing      k =
+performAction st         _ DoNothing          k =
   return unit
 
 spec :: T.Spec _ State _ Action
