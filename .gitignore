@@ -5,3 +5,7 @@ bower_components/react/*
 !bower_components/react/react.js
 !bower_components/react/LICENSE
 !bower_components/react/PATENTS
+!bower_components/es5-shim/
+bower_components/es5-shim/*
+!bower_components/es5-shim/es5-shim.js
+!bower_components/es5-shim/LICENSE
