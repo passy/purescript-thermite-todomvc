@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Data.Array (deleteAt, updateAt, filter, zipWith, length, (..))
+import Data.Tuple
+import Data.Array (map, deleteAt, updateAt, filter, length, (..))
 import Prelude.Unsafe (unsafeIndex)
 
 import qualified Thermite as T
@@ -87,7 +88,7 @@ render ctx (State st) _ =
   title = T.h1 [ A.className "title" ] [ T.text "todos" ]
 
   items :: T.Html _
-  items = T.ul [ A.className "items" ] (newItem : (zipWith item (filter (applyFilter st.filter) st.items) (0..length st.items)))
+  items = T.ul [ A.className "items" ] (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (0..length st.items)))
   
   newItem :: T.Html _
   newItem = T.li [ A.className "newItem" ]
@@ -98,8 +99,8 @@ render ctx (State st) _ =
                            ] []
                  ]
 
-  item :: Item -> Index -> T.Html _
-  item (Item name completed) index =
+  item :: Tuple Item Index -> T.Html _
+  item (Tuple (Item name completed) index) =
     T.li' [ T.input  [ A._type "checkbox"
                      , A.className "completed"
                      , A.checked (if completed then "checked" else "")
