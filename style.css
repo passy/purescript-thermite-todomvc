@@ -93,3 +93,31 @@ button.complete:hover {
     color: #a0a0a0;
     text-shadow: 0 0 5px black;
 }
+
+ul.filters {
+    margin: 10px 0;
+    list-style-type: none;
+    padding: 0;
+    display: block;
+    width: 100%;
+}
+
+ul.filters li {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 60%;
+}
+
+ul.filters li a {
+    text-decoration: none;
+    color: #606060;
+}
+
+ul.filters li a:hover {
+    color: #f0f0f0;
+}
+
+ul.filters li a.selected {
+    font-weight: bold;
+    color: #a0a0a0;
+}

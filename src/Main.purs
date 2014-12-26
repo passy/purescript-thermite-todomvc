@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Data.Array (deleteAt, zipWith, length, (..))
+import Data.Array (deleteAt, filter, zipWith, length, (..))
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -13,13 +13,29 @@ type Index = Number
 data Action 
   = NewItem String
   | RemoveItem Index
+  | SetFilter Filter
   | DoNothing
 
 data Item = Item String Boolean
 
+data Filter = All | Active | Completed
+
+instance eqFilter :: Eq Filter where
+  (==) All       All       = true
+  (==) Active    Active    = true
+  (==) Completed Completed = true
+  (==) _         _         = false
+  (/=) x         y         = not (x == y)
+
+showFilter :: Filter -> String
+showFilter All = "All"
+showFilter Active = "Active"
+showFilter Completed = "Completed"
+
 data State = State 
   { items :: [Item] 
   , newItemName :: String
+  , filter :: Filter
   }
 
 foreign import getValue 
@@ -40,17 +56,22 @@ handleCheckEvent :: T.FormEvent -> Action
 handleCheckEvent _ = DoNothing
 
 initialState :: State
-initialState = State { items: [], newItemName: "" }
+initialState = State { items: [], newItemName: "", filter: All }
+
+applyFilter :: Filter -> Item -> Boolean
+applyFilter All       _ = true
+applyFilter Active    (Item _ b) = not b
+applyFilter Completed (Item _ b) = b
 
 render :: T.Render State _ Action
 render ctx (State st) _ =
-  T.div [ A.className "body" ] [ title, items ]
+  T.div [ A.className "body" ] [ title, items, filters ]
   where
   title :: T.Html _
   title = T.h1 [ A.className "title" ] [ T.text "todos" ]
 
   items :: T.Html _
-  items = T.ul [ A.className "items" ] (newItem : (zipWith item st.items (0..length st.items)))
+  items = T.ul [ A.className "items" ] (newItem : (zipWith item (filter (applyFilter st.filter) st.items) (0..length st.items)))
   
   newItem :: T.Html _
   newItem = T.li [ A.className "newItem" ]
@@ -74,11 +95,23 @@ render ctx (State st) _ =
                      ] [ T.text "✖" ]
           ]
 
+  filters :: T.Html _
+  filters = T.ul [ A.className "filters" ] (filter_ <$> [All, Active, Completed])
+
+  filter_ :: Filter -> T.Html _
+  filter_ f = T.li [] [ T.a [ A.href "#"
+                            , A.className (if f == st.filter then "selected" else "") 
+                            , T.onClick ctx (\_ -> SetFilter f)
+                            ] [ T.text (showFilter f) ]
+                      ]
+
 performAction :: T.PerformAction State _ Action _ 
 performAction (State st) _ (NewItem s)    k = 
   k (State (st { items = st.items ++ [ Item s false ], newItemName = "" }))
 performAction (State st) _ (RemoveItem i) k = 
   k (State (st { items = deleteAt i 1 st.items }))
+performAction (State st) _ (SetFilter f)  k = 
+  k (State (st { filter = f }))
 performAction st         _ DoNothing      k =
   return unit
 
