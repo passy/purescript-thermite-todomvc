@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Data.Array (deleteAt, filter, zipWith, length, (..))
+import Data.Array (deleteAt, updateAt, filter, zipWith, length, (..))
+import Prelude.Unsafe (unsafeIndex)
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -13,6 +14,7 @@ type Index = Number
 data Action 
   = NewItem String
   | RemoveItem Index
+  | SetCompleted Index Boolean
   | SetFilter Filter
   | DoNothing
 
@@ -38,10 +40,15 @@ data State = State
   , filter :: Filter
   }
 
-foreign import getValue 
+foreign import getValue
   "function getValue(e) {\
   \  return e.target.value;\
   \}" :: T.KeyboardEvent -> String
+
+foreign import getChecked
+  "function getChecked(e) {\
+  \  return e.target.checked;\
+  \}" :: T.FormEvent -> Boolean
 
 foreign import getKeyCode
   "function getKeyCode(e) {\
@@ -52,8 +59,8 @@ handleKeyPress :: T.KeyboardEvent -> Action
 handleKeyPress e | getKeyCode e == 13 = NewItem $ getValue e
 handleKeyPress _ = DoNothing
 
-handleCheckEvent :: T.FormEvent -> Action
-handleCheckEvent _ = DoNothing
+handleCheckEvent :: Index -> T.FormEvent -> Action
+handleCheckEvent index e = SetCompleted index (getChecked e)
 
 initialState :: State
 initialState = State { items: [], newItemName: "", filter: All }
@@ -62,6 +69,9 @@ applyFilter :: Filter -> Item -> Boolean
 applyFilter All       _ = true
 applyFilter Active    (Item _ b) = not b
 applyFilter Completed (Item _ b) = b
+
+setCompleted :: Boolean -> Item -> Item
+setCompleted completed (Item name _) = Item name completed
 
 render :: T.Render State _ Action
 render ctx (State st) _ =
@@ -84,9 +94,9 @@ render ctx (State st) _ =
   item (Item name completed) index =
     T.li' [ T.input  [ A._type "checkbox"
                      , A.className "completed"
-                     , A.value (show completed)
+                     , A.checked (if completed then "checked" else "")
                      , A.title "Mark as completed"
-                     , T.onChange ctx handleCheckEvent 
+                     , T.onChange ctx (handleCheckEvent index)
                      ] []
           , T.span   [ A.className "description" ] [ T.text name ]
           , T.button [ A.className "complete"
@@ -110,6 +120,8 @@ performAction (State st) _ (NewItem s)    k =
   k (State (st { items = st.items ++ [ Item s false ], newItemName = "" }))
 performAction (State st) _ (RemoveItem i) k = 
   k (State (st { items = deleteAt i 1 st.items }))
+performAction (State st) _ (SetCompleted i c)  k = 
+  k (State (st { items = updateAt i (setCompleted c (st.items `unsafeIndex` i)) st.items }))
 performAction (State st) _ (SetFilter f)  k = 
   k (State (st { filter = f }))
 performAction st         _ DoNothing      k =
