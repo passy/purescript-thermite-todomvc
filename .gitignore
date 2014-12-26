@@ -3,3 +3,5 @@ bower_components/*
 !bower_components/react/
 bower_components/react/*
 !bower_components/react/react.js
+!bower_components/react/LICENSE
+!bower_components/react/PATENTS
