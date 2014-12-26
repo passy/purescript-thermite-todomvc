@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Data.Array (deleteAt)
+import Data.Array (deleteAt, zipWith, length, (..))
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -50,7 +50,7 @@ render ctx (State st) _ =
   title = T.h1 [ A.className "title" ] [ T.text "todos" ]
 
   items :: T.Html _
-  items = T.ul [ A.className "items" ] (newItem : (item <$> st.items))
+  items = T.ul [ A.className "items" ] (newItem : (zipWith item st.items (0..length st.items)))
   
   newItem :: T.Html _
   newItem = T.li [ A.className "newItem" ]
@@ -59,14 +59,19 @@ render ctx (State st) _ =
                            ] []
                  ]
 
-  item :: Item -> T.Html _
-  item (Item name completed) =
-    T.li' [ T.input [ A._type "checkbox"
-                    , A.className "completed"
-                    , A.value (show completed)
-                    , T.onChange ctx handleCheckEvent 
-                    ] []
-          , T.span [ A.className "description" ] [ T.text name ]
+  item :: Item -> Index -> T.Html _
+  item (Item name completed) index =
+    T.li' [ T.input  [ A._type "checkbox"
+                     , A.className "completed"
+                     , A.value (show completed)
+                     , A.title "Mark as completed"
+                     , T.onChange ctx handleCheckEvent 
+                     ] []
+          , T.span   [ A.className "description" ] [ T.text name ]
+          , T.button [ A.className "complete"
+                     , A.title "Remove item"
+                     , T.onClick ctx \_ -> RemoveItem index
+                     ] [ T.text "✖" ]
           ]
 
 performAction :: T.PerformAction State _ Action _ 

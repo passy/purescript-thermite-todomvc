@@ -45,6 +45,7 @@ h1.title {
 }
 
 li {
+    position: relative;
 }
 
 span.description {
@@ -71,4 +72,24 @@ input[type="checkbox"]:after {
 
 input[type="checkbox"]:checked:after {
     color: #f0f0f0;
+}
+
+button.complete {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    right: 10px;
+    color: #606060;
+    text-shadow: 0 0 2px black;
+    font-size: 1em;
+    text-decoration: none;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+button.complete:hover {
+    color: #a0a0a0;
+    text-shadow: 0 0 5px black;
 }

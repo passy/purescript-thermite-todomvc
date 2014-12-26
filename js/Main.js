@@ -812,71 +812,86 @@ module.exports = {
 var Thermite_Html_Elements = require("Thermite.Html.Elements");
 var Thermite_Html_Attributes = require("Thermite.Html.Attributes");
 var Thermite_Html = require("Thermite.Html");
+var Data_Array = require("Data.Array");
 var Thermite_Events = require("Thermite.Events");
 var Prelude = require("Prelude");
-var Data_Array = require("Data.Array");
 var Thermite = require("Thermite");
 var Control_Monad_Eff = require("Control.Monad.Eff");
-function Item(value0, value1) {
-    this.value0 = value0;
-    this.value1 = value1;
-};
-Item.create = function (value0) {
-    return function (value1) {
-        return new Item(value0, value1);
-    };
-};
-function State(value0) {
-    this.value0 = value0;
-};
-State.create = function (value0) {
-    return new State(value0);
-};
-function NewItem(value0) {
-    this.value0 = value0;
-};
-NewItem.create = function (value0) {
-    return new NewItem(value0);
-};
-function RemoveItem(value0) {
-    this.value0 = value0;
-};
-RemoveItem.create = function (value0) {
-    return new RemoveItem(value0);
-};
-function DoNothing() {
-
-};
-DoNothing.value = new DoNothing();
 function getValue(e) {  return e.target.value;};
 function getKeyCode(e) {  return e.keyCode;};
+var Item = (function () {
+    function Item(value0, value1) {
+        this.value0 = value0;
+        this.value1 = value1;
+    };
+    Item.create = function (value0) {
+        return function (value1) {
+            return new Item(value0, value1);
+        };
+    };
+    return Item;
+})();
+var State = (function () {
+    function State(value0) {
+        this.value0 = value0;
+    };
+    State.create = function (value0) {
+        return new State(value0);
+    };
+    return State;
+})();
+var NewItem = (function () {
+    function NewItem(value0) {
+        this.value0 = value0;
+    };
+    NewItem.create = function (value0) {
+        return new NewItem(value0);
+    };
+    return NewItem;
+})();
+var RemoveItem = (function () {
+    function RemoveItem(value0) {
+        this.value0 = value0;
+    };
+    RemoveItem.create = function (value0) {
+        return new RemoveItem(value0);
+    };
+    return RemoveItem;
+})();
+var DoNothing = (function () {
+    function DoNothing() {
+
+    };
+    DoNothing.value = new DoNothing();
+    return DoNothing;
+})();
 var performAction = function (_5) {
     return function (_6) {
         return function (_7) {
             return function (_8) {
                 if (_7 instanceof NewItem) {
                     return _8(new State((function () {
-                        var _14 = {};
-                        for (var _15 in _5.value0) {
-                            if (_5.value0.hasOwnProperty(_15)) {
-                                _14[_15] = _5.value0[_15];
+                        var _15 = {};
+                        for (var _16 in _5.value0) {
+                            if (_5.value0.hasOwnProperty(_16)) {
+                                _15[_16] = _5.value0[_16];
                             };
                         };
-                        _14.items = Prelude["++"](Data_Array.semigroupArray)(_5.value0.items)([ new Item(_7.value0, false) ]);
-                        _14.newItemName = "";
-                        return _14;
+                        _15.items = Prelude["++"](Data_Array.semigroupArray)(_5.value0.items)([ new Item(_7.value0, false) ]);
+                        _15.newItemName = "";
+                        return _15;
                     })()));
                 };
                 if (_7 instanceof RemoveItem) {
                     return _8(new State((function () {
-                        var _18 = {};
-                        for (var _19 in _5.value0) {
-                            if (_5.value0.hasOwnProperty(_19)) {
-                                _18[_19] = _5.value0[_19];
+                        var _19 = {};
+                        for (var _20 in _5.value0) {
+                            if (_5.value0.hasOwnProperty(_20)) {
+                                _19[_20] = _5.value0[_20];
                             };
                         };
-                        _18.items = Data_Array.deleteAt(_7.value0)(1)(_5.value0.items);
-                        return _18;
+                        _19.items = Data_Array.deleteAt(_7.value0)(1)(_5.value0.items);
+                        return _19;
                     })()));
                 };
                 if (_7 instanceof DoNothing) {
@@ -906,9 +921,13 @@ var render = function (_2) {
             var title = Thermite_Html_Elements.h1([ Thermite_Html_Attributes.className("title") ])([ Thermite_Html.text("todos") ]);
             var newItem = Thermite_Html_Elements.li([ Thermite_Html_Attributes.className("newItem") ])([ Thermite_Html_Elements.input([ Thermite_Html_Attributes.placeholder("Create a new task"), Thermite_Events.onKeyUp(_2)(handleKeyPress) ])([  ]) ]);
             var item = function (_9) {
-                return Thermite_Html_Elements["li'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("checkbox"), Thermite_Html_Attributes.className("completed"), Thermite_Html_Attributes.value(Prelude.show(Prelude.showBoolean)(_9.value1)), Thermite_Events.onChange(_2)(handleCheckEvent) ])([  ]), Thermite_Html_Elements.span([ Thermite_Html_Attributes.className("description") ])([ Thermite_Html.text(_9.value0) ]) ]);
+                return function (_10) {
+                    return Thermite_Html_Elements["li'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("checkbox"), Thermite_Html_Attributes.className("completed"), Thermite_Html_Attributes.value(Prelude.show(Prelude.showBoolean)(_9.value1)), Thermite_Html_Attributes.title("Mark as completed"), Thermite_Events.onChange(_2)(handleCheckEvent) ])([  ]), Thermite_Html_Elements.span([ Thermite_Html_Attributes.className("description") ])([ Thermite_Html.text(_9.value0) ]), Thermite_Html_Elements.button([ Thermite_Html_Attributes.className("complete"), Thermite_Html_Attributes.title("Remove item"), Thermite_Events.onClick(_2)(function (_) {
+                        return new RemoveItem(_10);
+                    }) ])([ Thermite_Html.text("\u2716") ]) ]);
+                };
             };
-            var items = Thermite_Html_Elements.ul([ Thermite_Html_Attributes.className("items") ])(Prelude[":"](newItem)(Prelude["<$>"](Data_Array.functorArray)(item)(_3.value0.items)));
+            var items = Thermite_Html_Elements.ul([ Thermite_Html_Attributes.className("items") ])(Prelude[":"](newItem)(Data_Array.zipWith(item)(_3.value0.items)(Data_Array[".."](0)(Data_Array.length(_3.value0.items)))));
             return Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("body") ])([ title, items ]);
         };
     };
