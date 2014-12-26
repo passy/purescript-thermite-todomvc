@@ -29,6 +29,7 @@ ul.items li:nth-child(odd) {
 }
 
 ul.items li.newItem input {
+    font-family: 'Roboto', sans-serif;
     font-size: 1em;
     width: 100%;
     padding: 4px;
