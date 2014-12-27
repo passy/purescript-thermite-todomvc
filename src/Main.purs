@@ -1,7 +1,12 @@
 module Main (main) where
 
+import Data.Array (map, deleteAt, updateAt, filter, length, range)
 import Data.Tuple
-import Data.Array (map, deleteAt, updateAt, filter, length, (..))
+
+import Optic.Core ((..), (.~), LensP())
+import Optic.Extended ((.=), (++=), (#~))
+import Optic.Index (ix)
+
 import Prelude.Unsafe (unsafeIndex)
 
 import qualified Thermite as T
@@ -12,7 +17,7 @@ import qualified Thermite.Events as T
 
 type Index = Number
 
-data Action 
+data Action
   = NewItem String
   | RemoveItem Index
   | SetEditText String
@@ -36,11 +41,23 @@ showFilter All = "All"
 showFilter Active = "Active"
 showFilter Completed = "Completed"
 
-data State = State 
-  { items :: [Item] 
+data State = State
+  { items :: [Item]
   , editText :: String
   , filter :: Filter
   }
+
+_State :: LensP State {items :: _, editText :: _, filter :: _}
+_State f (State st) = State <$> f st
+
+items :: forall r. LensP {items :: _ | r} _
+items f st = f st.items <#> \i -> st{items = i}
+
+editText :: forall r. LensP {editText :: _ | r} _
+editText f st = f st.editText <#> \i -> st{editText = i}
+
+itemBoolean :: LensP Item Boolean
+itemBoolean f (Item str b) = Item str <$> f b
 
 foreign import getValue
   "function getValue(e) {\
@@ -77,9 +94,6 @@ applyFilter All       _ = true
 applyFilter Active    (Item _ b) = not b
 applyFilter Completed (Item _ b) = b
 
-setCompleted :: Boolean -> Item -> Item
-setCompleted completed (Item name _) = Item name completed
-
 render :: T.Render State _ Action
 render ctx (State st) _ =
   T.div [ A.className "body" ] [ title, items, filters ]
@@ -88,11 +102,11 @@ render ctx (State st) _ =
   title = T.h1 [ A.className "title" ] [ T.text "todos" ]
 
   items :: T.Html _
-  items = T.ul [ A.className "items" ] (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (0..length st.items)))
-  
+  items = T.ul [ A.className "items" ] (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items)))
+
   newItem :: T.Html _
   newItem = T.li [ A.className "newItem" ]
-                 [ T.input [ A.placeholder "Create a new task" 
+                 [ T.input [ A.placeholder "Create a new task"
                            , A.value st.editText
                            , T.onKeyUp ctx handleKeyPress
                            , T.onChange ctx handleChangeEvent
@@ -119,21 +133,22 @@ render ctx (State st) _ =
 
   filter_ :: Filter -> T.Html _
   filter_ f = T.li [] [ T.a [ A.href "#"
-                            , A.className (if f == st.filter then "selected" else "") 
+                            , A.className (if f == st.filter then "selected" else "")
                             , T.onClick ctx (\_ -> SetFilter f)
                             ] [ T.text (showFilter f) ]
                       ]
 
-performAction :: T.PerformAction State _ Action _ 
-performAction (State st) _ (NewItem s)        k = 
-  k (State (st { items = st.items ++ [ Item s false ], editText = "" }))
-performAction (State st) _ (RemoveItem i)     k = 
+performAction :: T.PerformAction State _ Action _
+performAction st         _ (NewItem s)        k = k $ st #~ do
+  _State..items ++= [Item s false]
+  _State..editText .= ""
+performAction (State st) _ (RemoveItem i)     k =
   k (State (st { items = deleteAt i 1 st.items }))
-performAction (State st) _ (SetEditText s)    k = 
+performAction (State st) _ (SetEditText s)    k =
   k (State (st { editText = s }))
-performAction (State st) _ (SetCompleted i c) k = 
-  k (State (st { items = updateAt i (setCompleted c (st.items `unsafeIndex` i)) st.items }))
-performAction (State st) _ (SetFilter f)      k = 
+performAction (State st) _ (SetCompleted i c) k =
+  k (State (st # items..ix i..itemBoolean .~ c))
+performAction (State st) _ (SetFilter f)      k =
   k (State (st { filter = f }))
 performAction st         _ DoNothing          k =
   return unit
