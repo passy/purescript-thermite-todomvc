@@ -6,6 +6,7 @@ import Data.Tuple
 import Optic.Core ((..), (.~), LensP())
 import Optic.Extended ((.=), (++=), (#~))
 import Optic.Index (ix)
+import Optic.Setter (over)
 
 import Prelude.Unsafe (unsafeIndex)
 
@@ -14,6 +15,7 @@ import qualified Thermite.Html as T
 import qualified Thermite.Html.Elements as T
 import qualified Thermite.Html.Attributes as A
 import qualified Thermite.Events as T
+import qualified Thermite.Action as T
 
 type Index = Number
 
@@ -47,14 +49,17 @@ data State = State
   , filter :: Filter
   }
 
-_State :: LensP State {items :: _, editText :: _, filter :: _}
+_State :: LensP State { items :: _, editText :: _, filter :: _ }
 _State f (State st) = State <$> f st
 
-items :: forall r. LensP {items :: _ | r} _
-items f st = f st.items <#> \i -> st{items = i}
+items :: forall r. LensP { items :: _ | r } _
+items f st = f st.items <#> \i -> st { items = i }
 
-editText :: forall r. LensP {editText :: _ | r} _
-editText f st = f st.editText <#> \i -> st{editText = i}
+editText :: forall r. LensP { editText :: _ | r } _
+editText f st = f st.editText <#> \i -> st { editText = i }
+
+filter_ :: forall r. LensP { filter :: _ | r } _
+filter_ f st = f st.filter <#> \i -> st { filter = i }
 
 itemBoolean :: LensP Item Boolean
 itemBoolean f (Item str b) = Item str <$> f b
@@ -139,19 +144,16 @@ render ctx (State st) _ =
                       ]
 
 performAction :: T.PerformAction State _ Action _
-performAction st         _ (NewItem s)        k = k $ st #~ do
-  _State..items ++= [Item s false]
-  _State..editText .= ""
-performAction (State st) _ (RemoveItem i)     k =
-  k (State (st { items = deleteAt i 1 st.items }))
-performAction (State st) _ (SetEditText s)    k =
-  k (State (st { editText = s }))
-performAction (State st) _ (SetCompleted i c) k =
-  k (State (st # items..ix i..itemBoolean .~ c))
-performAction (State st) _ (SetFilter f)      k =
-  k (State (st { filter = f }))
-performAction st         _ DoNothing          k =
-  return unit
+performAction _ action = T.modifyState (updateState action)
+  where
+  updateState :: Action -> State -> State
+  updateState (NewItem s)        = \st -> st #~ do _State .. items ++= [Item s false]
+                                                   _State .. editText .= ""
+  updateState (RemoveItem i)     = over (_State..items) (deleteAt i 1)
+  updateState (SetEditText s)    = _State .. editText .~ s
+  updateState (SetCompleted i c) = _State .. items .. ix i .. itemBoolean .~ c
+  updateState (SetFilter f)      = _State .. filter_ .~ f
+  updateState DoNothing          = id
 
 spec :: T.Spec _ State _ Action
 spec = T.Spec { initialState: initialState
