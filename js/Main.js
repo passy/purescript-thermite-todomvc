@@ -108,6 +108,9 @@ PS.Prelude = (function () {
             };
         };
     };
+    var $less$times$greater = function (dict) {
+        return dict["<*>"];
+    };
     var $less$dollar$greater = function (dict) {
         return dict["<$>"];
     };
@@ -158,16 +161,35 @@ PS.Prelude = (function () {
             };
         };
     };
+    var liftA1 = function (__dict_Applicative_7) {
+        return function (f) {
+            return function (a) {
+                return $less$times$greater(__dict_Applicative_7["__superclass_Prelude.Apply_0"]())(pure(__dict_Applicative_7)(f))(a);
+            };
+        };
+    };
     var id = function (dict) {
         return dict.id;
+    };
+    var flip = function (f) {
+        return function (b) {
+            return function (a) {
+                return f(a)(b);
+            };
+        };
     };
     var eqNumber = new Eq(refIneq, refEq);
     var ordNumber = new Ord(function () {
         return eqNumber;
     }, unsafeCompare);
-    var $$const = function (_28) {
-        return function (_29) {
-            return _28;
+    var $$const = function (_31) {
+        return function (_32) {
+            return _31;
+        };
+    };
+    var $$void = function (__dict_Functor_9) {
+        return function (fa) {
+            return $less$dollar$greater(__dict_Functor_9)($$const(unit))(fa);
         };
     };
     var compare = function (dict) {
@@ -176,8 +198,8 @@ PS.Prelude = (function () {
     var $less = function (__dict_Ord_11) {
         return function (a1) {
             return function (a2) {
-                var _676 = compare(__dict_Ord_11)(a1)(a2);
-                if (_676 instanceof LT) {
+                var _681 = compare(__dict_Ord_11)(a1)(a2);
+                if (_681 instanceof LT) {
                     return true;
                 };
                 return false;
@@ -232,7 +254,10 @@ PS.Prelude = (function () {
         liftM1: liftM1, 
         "return": $$return, 
         ">>=": $greater$greater$eq, 
+        liftA1: liftA1, 
         pure: pure, 
+        "<*>": $less$times$greater, 
+        "void": $$void, 
         "<#>": $less$hash$greater, 
         "<$>": $less$dollar$greater, 
         cons: cons, 
@@ -242,6 +267,7 @@ PS.Prelude = (function () {
         ">>>": $greater$greater$greater, 
         "<<<": $less$less$less, 
         "const": $$const, 
+        flip: flip, 
         semigroupoidArr: semigroupoidArr, 
         categoryArr: categoryArr, 
         numNumber: numNumber, 
@@ -251,89 +277,14 @@ PS.Prelude = (function () {
     };
 })();
 var PS = PS || {};
-PS.Thermite_Html = (function () {
+PS.Thermite_Types = (function () {
     "use strict";
     var Prelude = PS.Prelude;
-    
-  function text(s) {
-    return s;
-  }
-  ;
-    
-  function createElement(name) {
-    return function(ps) {
-      return function(children) {
-        var props = {};
-
-        for (var i = 0; i < ps.length; i++) {
-          var p = ps[i];
-          props[p[0]] = p[1];
-        }
-
-        return React.createElement(name, props, children);
-      };
+    var Spec = function (x) {
+        return x;
     };
-  }
-  ;
     return {
-        text: text, 
-        createElement: createElement
-    };
-})();
-var PS = PS || {};
-PS.Thermite_Html_Attributes = (function () {
-    "use strict";
-    var Prelude = PS.Prelude;
-    var Thermite_Html = PS.Thermite_Html;
-    
-  function attribute(attr) {
-    return function(value) {
-      return [attr, value];
-    };
-  }   
-  ;
-    var value = attribute("value");
-    var title = attribute("title");
-    var placeholder = attribute("placeholder");
-    var href = attribute("href");
-    var className = attribute("className");
-    var checked = attribute("checked");
-    var _type = attribute("type");
-    return {
-        value: value, 
-        _type: _type, 
-        title: title, 
-        placeholder: placeholder, 
-        href: href, 
-        className: className, 
-        checked: checked, 
-        attribute: attribute
-    };
-})();
-var PS = PS || {};
-PS.Thermite_Html_Elements = (function () {
-    "use strict";
-    var Thermite_Html = PS.Thermite_Html;
-    var Prelude = PS.Prelude;
-    var ul = Thermite_Html.createElement("ul");
-    var span = Thermite_Html.createElement("span");
-    var li = Thermite_Html.createElement("li");
-    var li$prime = li([  ]);
-    var input = Thermite_Html.createElement("input");
-    var h1 = Thermite_Html.createElement("h1");
-    var div = Thermite_Html.createElement("div");
-    var button = Thermite_Html.createElement("button");
-    var a = Thermite_Html.createElement("a");
-    return {
-        ul: ul, 
-        span: span, 
-        "li'": li$prime, 
-        li: li, 
-        input: input, 
-        h1: h1, 
-        div: div, 
-        button: button, 
-        a: a
+        Spec: Spec
     };
 })();
 var PS = PS || {};
@@ -366,97 +317,90 @@ PS.Data_Profunctor = (function () {
     };
 })();
 var PS = PS || {};
-PS.Thermite_Action = (function () {
+PS.Control_Monad_Eff = (function () {
     "use strict";
     var Prelude = PS.Prelude;
-    var Control_Monad_Eff = PS.Control_Monad_Eff;
-    var Action = function (x) {
-        return x;
-    };
-    var action = function (act) {
-        return function (s) {
-            return function (k) {
-                return act(s)(function (a) {
-                    return function (s1) {
-                        return k({
-                            state: s1, 
-                            value: a
-                        });
-                    };
-                });
-            };
-        };
-    };
-    var modifyState = function (f) {
-        return action(function (s) {
-            return function (k) {
-                return k(Prelude.unit)(f(s));
-            };
-        });
-    };
+    function returnE(a) {  return function() {    return a;  };};
+    function bindE(a) {  return function(f) {    return function() {      return f(a())();    };  };};
+    var monadEff = new Prelude.Monad(function () {
+        return applicativeEff;
+    }, function () {
+        return bindEff;
+    });
+    var bindEff = new Prelude.Bind(bindE, function () {
+        return applyEff;
+    });
+    var applyEff = new Prelude.Apply(Prelude.ap(monadEff), function () {
+        return functorEff;
+    });
+    var applicativeEff = new Prelude.Applicative(function () {
+        return applyEff;
+    }, returnE);
+    var functorEff = new Prelude.Functor(Prelude.liftA1(applicativeEff));
     return {
-        modifyState: modifyState, 
-        action: action
+        bindE: bindE, 
+        returnE: returnE, 
+        functorEff: functorEff, 
+        applyEff: applyEff, 
+        applicativeEff: applicativeEff, 
+        bindEff: bindEff, 
+        monadEff: monadEff
     };
 })();
 var PS = PS || {};
-PS.Thermite = (function () {
+PS.Thermite_Internal = (function () {
     "use strict";
     var Prelude = PS.Prelude;
     var DOM = PS.DOM;
     var Control_Monad_Eff = PS.Control_Monad_Eff;
-    var Thermite_Html = PS.Thermite_Html;
-    var Thermite_Action = PS.Thermite_Action;
+    var Thermite_Types = PS.Thermite_Types;
     
-  function createClassImpl(spec) {
-    return React.createClass({
-      getInitialState: function() {
-        return spec.initialState;
-      },
-      performAction: function(action) {
-        var self = this;
-        spec.performAction(self.props)(action)(self.state)(function(o) {
-          return function() {
-            self.setState(o.state);
-          };
-        })();
-      },
-      render: function() {
-        return spec.render(this)(this.state)(this.props);
-      }
-    }); 
+  function getStateImpl(ctx) {
+    return function() {
+      return ctx.state;
+    };
   }
   ;
     
-  function render(component) {
-    return function(props) {
+  function setStateImpl(ctx) {
+    return function(state) {
       return function() {
-        React.render(React.createElement(component, props), document.body);
+        ctx.setState(state);
+      };
+    };
+  } 
+  ;
+    
+  function textImpl(s) {
+    return s;
+  }
+  ;
+    
+  function createElementImpl(name) {
+    return function(ps) {
+      return function(children) {
+        var props = {};
+
+        for (var i = 0; i < ps.length; i++) {
+          var p = ps[i];
+          props[p[0]] = p[1];
+        }
+
+        return React.createElement(name, props, children);
       };
     };
   }
   ;
-    var Spec = function (x) {
-        return x;
+    
+  function attribute(attr) {
+    return function(value) {
+      return [attr, value];
     };
-    var createClass = function (_70) {
-        return createClassImpl(_70);
-    };
-    return {
-        Spec: Spec, 
-        render: render, 
-        createClass: createClass
-    };
-})();
-var PS = PS || {};
-PS.Thermite_Events = (function () {
-    "use strict";
-    var Prelude = PS.Prelude;
-    var Thermite = PS.Thermite;
-    var Thermite_Html = PS.Thermite_Html;
+  }   
+  ;
     
   function event(name) {
-    return function onClick(context) {
+    return function(context) {
       return function(f) {
         return [name, function(e) {
           context.performAction(f(e));
@@ -465,14 +409,289 @@ PS.Thermite_Events = (function () {
     };
   }
   ;
-    var onKeyUp = event("onKeyUp");
-    var onClick = event("onClick");
-    var onChange = event("onChange");
+    
+  function createClassImpl(runAction) {
+    return function(spec) {
+      return React.createClass({
+        getInitialState: function() {
+          return spec.initialState;
+        },
+        performAction: function(action) {
+          runAction(this)(spec.performAction(this)(action))();
+        },
+        render: function() {
+          return spec.render(this)(this.state)(this.props);
+        }
+      });
+    }; 
+  }
+  ;
+    
+  function renderImpl(component) {
+    return function(props) {
+      return function() {
+        React.render(React.createElement(component, props), document.body);
+      };
+    };
+  }
+  ;
+    return {
+        renderImpl: renderImpl, 
+        createClassImpl: createClassImpl, 
+        event: event, 
+        attribute: attribute, 
+        createElementImpl: createElementImpl, 
+        textImpl: textImpl, 
+        setStateImpl: setStateImpl, 
+        getStateImpl: getStateImpl
+    };
+})();
+var PS = PS || {};
+PS.Thermite_Action = (function () {
+    "use strict";
+    var Prelude = PS.Prelude;
+    var Thermite_Internal = PS.Thermite_Internal;
+    var Control_Monad_Eff = PS.Control_Monad_Eff;
+    var Thermite_Types = PS.Thermite_Types;
+    var GetState = (function () {
+        function GetState(value0) {
+            this.value0 = value0;
+        };
+        GetState.create = function (value0) {
+            return new GetState(value0);
+        };
+        return GetState;
+    })();
+    var SetState = (function () {
+        function SetState(value0, value1) {
+            this.value0 = value0;
+            this.value1 = value1;
+        };
+        SetState.create = function (value0) {
+            return function (value1) {
+                return new SetState(value0, value1);
+            };
+        };
+        return SetState;
+    })();
+    var Wait = (function () {
+        function Wait(value0) {
+            this.value0 = value0;
+        };
+        Wait.create = function (value0) {
+            return new Wait(value0);
+        };
+        return Wait;
+    })();
+    var Pure = (function () {
+        function Pure(value0) {
+            this.value0 = value0;
+        };
+        Pure.create = function (value0) {
+            return new Pure(value0);
+        };
+        return Pure;
+    })();
+    var Impure = (function () {
+        function Impure(value0) {
+            this.value0 = value0;
+        };
+        Impure.create = function (value0) {
+            return new Impure(value0);
+        };
+        return Impure;
+    })();
+    var setState = function (s) {
+        return Impure.create(new SetState(s, new Pure(Prelude.unit)));
+    };
+    var runAction = function (ctx) {
+        var go = function (_70) {
+            if (_70 instanceof Pure) {
+                return Prelude["return"](Control_Monad_Eff.monadEff)(Prelude.unit);
+            };
+            if (_70 instanceof Impure && _70.value0 instanceof GetState) {
+                return Prelude["void"](Control_Monad_Eff.functorEff)(function __do() {
+                    var _3 = Thermite_Internal.getStateImpl(ctx)();
+                    return go(_70.value0.value0(_3))();
+                });
+            };
+            if (_70 instanceof Impure && _70.value0 instanceof SetState) {
+                return Prelude["void"](Control_Monad_Eff.functorEff)(function __do() {
+                    Thermite_Internal.setStateImpl(ctx)(_70.value0.value0)();
+                    return go(_70.value0.value1)();
+                });
+            };
+            if (_70 instanceof Impure && _70.value0 instanceof Wait) {
+                return _70.value0.value0(go);
+            };
+            throw new Error("Failed pattern match");
+        };
+        return go;
+    };
+    var getState = Impure.create(new GetState(Pure.create));
+    var functorActionF = new Prelude.Functor(function (_68) {
+        return function (_69) {
+            if (_69 instanceof GetState) {
+                return new GetState(Prelude["<<<"](Prelude.semigroupoidArr)(_68)(_69.value0));
+            };
+            if (_69 instanceof SetState) {
+                return new SetState(_69.value0, _68(_69.value1));
+            };
+            if (_69 instanceof Wait) {
+                return new Wait(function (k_1) {
+                    return _69.value0(Prelude["<<<"](Prelude.semigroupoidArr)(k_1)(_68));
+                });
+            };
+            throw new Error("Failed pattern match");
+        };
+    });
+    var functorAction = new Prelude.Functor(function (_71) {
+        return function (_72) {
+            if (_72 instanceof Pure) {
+                return new Pure(_71(_72.value0));
+            };
+            if (_72 instanceof Impure) {
+                return new Impure(Prelude["<$>"](functorActionF)(Prelude["<$>"](functorAction)(_71))(_72.value0));
+            };
+            throw new Error("Failed pattern match");
+        };
+    });
+    var monadAction = new Prelude.Monad(function () {
+        return applicativeAction;
+    }, function () {
+        return bindAction;
+    });
+    var bindAction = new Prelude.Bind(function (_73) {
+        return function (_74) {
+            if (_73 instanceof Pure) {
+                return _74(_73.value0);
+            };
+            if (_73 instanceof Impure) {
+                return Impure.create(Prelude["<#>"](functorActionF)(_73.value0)(function (a_1) {
+                    return Prelude[">>="](bindAction)(a_1)(_74);
+                }));
+            };
+            throw new Error("Failed pattern match");
+        };
+    }, function () {
+        return applyAction;
+    });
+    var applyAction = new Prelude.Apply(Prelude.ap(monadAction), function () {
+        return functorAction;
+    });
+    var applicativeAction = new Prelude.Applicative(function () {
+        return applyAction;
+    }, Pure.create);
+    var modifyState = function (f) {
+        return Prelude[">>="](bindAction)(getState)(function (_4) {
+            return setState(f(_4));
+        });
+    };
+    return {
+        modifyState: modifyState, 
+        setState: setState, 
+        getState: getState, 
+        runAction: runAction, 
+        functorAction: functorAction, 
+        applyAction: applyAction, 
+        applicativeAction: applicativeAction, 
+        bindAction: bindAction, 
+        monadAction: monadAction
+    };
+})();
+var PS = PS || {};
+PS.Thermite_Events = (function () {
+    "use strict";
+    var Thermite_Internal = PS.Thermite_Internal;
+    var Prelude = PS.Prelude;
+    var Thermite_Types = PS.Thermite_Types;
+    var onKeyUp = Thermite_Internal.event("onKeyUp");
+    var onClick = Thermite_Internal.event("onClick");
+    var onChange = Thermite_Internal.event("onChange");
     return {
         onClick: onClick, 
         onChange: onChange, 
-        onKeyUp: onKeyUp, 
-        event: event
+        onKeyUp: onKeyUp
+    };
+})();
+var PS = PS || {};
+PS.Thermite_Html = (function () {
+    "use strict";
+    var Thermite_Internal = PS.Thermite_Internal;
+    var Prelude = PS.Prelude;
+    var Thermite_Types = PS.Thermite_Types;
+    var text = Thermite_Internal.textImpl;
+    return {
+        text: text
+    };
+})();
+var PS = PS || {};
+PS.Thermite = (function () {
+    "use strict";
+    var Thermite_Internal = PS.Thermite_Internal;
+    var Thermite_Action = PS.Thermite_Action;
+    var Prelude = PS.Prelude;
+    var DOM = PS.DOM;
+    var Control_Monad_Eff = PS.Control_Monad_Eff;
+    var Thermite_Html = PS.Thermite_Html;
+    var Thermite_Types = PS.Thermite_Types;
+    var render = Thermite_Internal.renderImpl;
+    var createClass = function (_75) {
+        return Thermite_Internal.createClassImpl(Thermite_Action.runAction)(_75);
+    };
+    return {
+        render: render, 
+        createClass: createClass
+    };
+})();
+var PS = PS || {};
+PS.Thermite_Html_Attributes = (function () {
+    "use strict";
+    var Thermite_Internal = PS.Thermite_Internal;
+    var Prelude = PS.Prelude;
+    var Thermite_Types = PS.Thermite_Types;
+    var value = Thermite_Internal.attribute("value");
+    var title = Thermite_Internal.attribute("title");
+    var placeholder = Thermite_Internal.attribute("placeholder");
+    var href = Thermite_Internal.attribute("href");
+    var className = Thermite_Internal.attribute("className");
+    var checked = Thermite_Internal.attribute("checked");
+    var _type = Thermite_Internal.attribute("type");
+    return {
+        value: value, 
+        _type: _type, 
+        title: title, 
+        placeholder: placeholder, 
+        href: href, 
+        className: className, 
+        checked: checked
+    };
+})();
+var PS = PS || {};
+PS.Thermite_Html_Elements = (function () {
+    "use strict";
+    var Thermite_Internal = PS.Thermite_Internal;
+    var Prelude = PS.Prelude;
+    var Thermite_Types = PS.Thermite_Types;
+    var ul = Thermite_Internal.createElementImpl("ul");
+    var span = Thermite_Internal.createElementImpl("span");
+    var li = Thermite_Internal.createElementImpl("li");
+    var li$prime = li([  ]);
+    var input = Thermite_Internal.createElementImpl("input");
+    var h1 = Thermite_Internal.createElementImpl("h1");
+    var div = Thermite_Internal.createElementImpl("div");
+    var button = Thermite_Internal.createElementImpl("button");
+    var a = Thermite_Internal.createElementImpl("a");
+    return {
+        ul: ul, 
+        span: span, 
+        "li'": li$prime, 
+        li: li, 
+        input: input, 
+        h1: h1, 
+        div: div, 
+        button: button, 
+        a: a
     };
 })();
 var PS = PS || {};
@@ -528,11 +747,11 @@ PS.Data_Tuple = (function () {
         return Tuple;
     })();
     var zip = Data_Array.zipWith(Tuple.create);
-    var snd = function (_201) {
-        return _201.value1;
+    var snd = function (_206) {
+        return _206.value1;
     };
-    var fst = function (_200) {
-        return _200.value0;
+    var fst = function (_205) {
+        return _205.value0;
     };
     return {
         Tuple: Tuple, 
@@ -555,8 +774,8 @@ PS.Control_Monad_State_Trans = (function () {
     var StateT = function (x) {
         return x;
     };
-    var runStateT = function (_258) {
-        return _258;
+    var runStateT = function (_263) {
+        return _263;
     };
     var monadStateT = function (__dict_Monad_186) {
         return new Prelude.Monad(function () {
@@ -569,11 +788,11 @@ PS.Control_Monad_State_Trans = (function () {
         return new Prelude.Functor(Prelude.liftM1(monadStateT(__dict_Monad_190)));
     };
     var bindStateT = function (__dict_Monad_193) {
-        return new Prelude.Bind(function (_259) {
-            return function (_260) {
+        return new Prelude.Bind(function (_264) {
+            return function (_265) {
                 return function (s) {
-                    return Prelude[">>="](__dict_Monad_193["__superclass_Prelude.Bind_1"]())(_259(s))(function (_13) {
-                        return runStateT(_260(_13.value0))(_13.value1);
+                    return Prelude[">>="](__dict_Monad_193["__superclass_Prelude.Bind_1"]())(_264(s))(function (_16) {
+                        return runStateT(_265(_16.value0))(_16.value1);
                     });
                 };
             };
@@ -616,17 +835,17 @@ PS.Data_Identity = (function () {
     var Identity = function (x) {
         return x;
     };
-    var runIdentity = function (_515) {
-        return _515;
+    var runIdentity = function (_520) {
+        return _520;
     };
-    var functorIdentity = new Prelude.Functor(function (_521) {
-        return function (_522) {
-            return _521(_522);
+    var functorIdentity = new Prelude.Functor(function (_526) {
+        return function (_527) {
+            return _526(_527);
         };
     });
-    var applyIdentity = new Prelude.Apply(function (_523) {
-        return function (_524) {
-            return _523(_524);
+    var applyIdentity = new Prelude.Apply(function (_528) {
+        return function (_529) {
+            return _528(_529);
         };
     }, function () {
         return functorIdentity;
@@ -775,25 +994,25 @@ PS.Optic_Index = (function () {
         return Optic_Index_Class.indexKeyArray;
     }, function () {
         return Optic_Index_Class.indexValueArray;
-    }, function (_646) {
+    }, function (_651) {
         return function (__dict_Applicative_622) {
-            return function (_647) {
-                return function (_648) {
-                    if (_646 < 0) {
-                        return Prelude.pure(__dict_Applicative_622)(_648);
+            return function (_652) {
+                return function (_653) {
+                    if (_651 < 0) {
+                        return Prelude.pure(__dict_Applicative_622)(_653);
                     };
-                    if (_648.length === 0) {
+                    if (_653.length === 0) {
                         return Prelude.pure(__dict_Applicative_622)([  ]);
                     };
-                    if (_646 === 0 && _648.length >= 1) {
-                        var _701 = _648.slice(1);
-                        return Prelude["<#>"]((__dict_Applicative_622["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(_647(_648[0]))(function (a$prime) {
-                            return Prelude[":"](a$prime)(_701);
+                    if (_651 === 0 && _653.length >= 1) {
+                        var _731 = _653.slice(1);
+                        return Prelude["<#>"]((__dict_Applicative_622["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(_652(_653[0]))(function (a$prime) {
+                            return Prelude[":"](a$prime)(_731);
                         });
                     };
-                    if (_648.length >= 1) {
-                        var _703 = _648.slice(1);
-                        return Prelude["<$>"]((__dict_Applicative_622["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"](_648[0]))(ix(indexArray)(_646 - 1)(__dict_Applicative_622)(_647)(_703));
+                    if (_653.length >= 1) {
+                        var _733 = _653.slice(1);
+                        return Prelude["<$>"]((__dict_Applicative_622["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"](_653[0]))(ix(indexArray)(_651 - 1)(__dict_Applicative_622)(_652)(_733));
                     };
                     throw new Error("Failed pattern match");
                 };
@@ -832,7 +1051,7 @@ PS.Optic_Setter = (function () {
     var $plus$plus$tilde = function (__dict_Semigroup_670) {
         return function (staa) {
             return function (a) {
-                return over(Data_Profunctor.profunctorArr)(staa)(Prelude["++"](__dict_Semigroup_670)(a));
+                return over(Data_Profunctor.profunctorArr)(staa)(Prelude.flip(Prelude["++"](__dict_Semigroup_670))(a));
             };
         };
     };
@@ -932,6 +1151,7 @@ PS.Main = (function () {
     var Optic_Core = PS.Optic_Core;
     var Optic_Extended = PS.Optic_Extended;
     var Prelude_Unsafe = PS.Prelude_Unsafe;
+    var Thermite_Types = PS.Thermite_Types;
     var Control_Monad_State_Trans = PS.Control_Monad_State_Trans;
     var Data_Identity = PS.Data_Identity;
     var Control_Monad_State_Class = PS.Control_Monad_State_Class;
@@ -1036,14 +1256,14 @@ PS.Main = (function () {
         DoNothing.value = new DoNothing();
         return DoNothing;
     })();
-    var showFilter = function (_657) {
-        if (_657 instanceof All) {
+    var showFilter = function (_662) {
+        if (_662 instanceof All) {
             return "All";
         };
-        if (_657 instanceof Active) {
+        if (_662 instanceof Active) {
             return "Active";
         };
-        if (_657 instanceof Completed) {
+        if (_662 instanceof Completed) {
             return "Completed";
         };
         throw new Error("Failed pattern match");
@@ -1052,22 +1272,22 @@ PS.Main = (function () {
         return function (f) {
             return function (st) {
                 return Prelude["<#>"](__dict_Functor_715)(f(st.items))(function (i) {
-                    var _705 = {};
-                    for (var _706 in st) {
-                        if (st.hasOwnProperty(_706)) {
-                            _705[_706] = st[_706];
+                    var _735 = {};
+                    for (var _736 in st) {
+                        if (st.hasOwnProperty(_736)) {
+                            _735[_736] = st[_736];
                         };
                     };
-                    _705.items = i;
-                    return _705;
+                    _735.items = i;
+                    return _735;
                 });
             };
         };
     };
     var itemBoolean = function (__dict_Functor_716) {
-        return function (_660) {
-            return function (_661) {
-                return Prelude["<$>"](__dict_Functor_716)(Item.create(_661.value0))(_660(_661.value1));
+        return function (_665) {
+            return function (_666) {
+                return Prelude["<$>"](__dict_Functor_716)(Item.create(_666.value0))(_665(_666.value1));
             };
         };
     };
@@ -1077,11 +1297,11 @@ PS.Main = (function () {
         filter: All.value
     });
     var handleKeyPress = function (e) {
-        var _711 = getKeyCode(e);
-        if (_711 === 13) {
+        var _741 = getKeyCode(e);
+        if (_741 === 13) {
             return NewItem.create(getValue(e));
         };
-        if (_711 === 27) {
+        if (_741 === 27) {
             return new SetEditText("");
         };
         return DoNothing.value;
@@ -1098,14 +1318,14 @@ PS.Main = (function () {
         return function (f) {
             return function (st) {
                 return Prelude["<#>"](__dict_Functor_717)(f(st.filter))(function (i) {
-                    var _712 = {};
-                    for (var _713 in st) {
-                        if (st.hasOwnProperty(_713)) {
-                            _712[_713] = st[_713];
+                    var _742 = {};
+                    for (var _743 in st) {
+                        if (st.hasOwnProperty(_743)) {
+                            _742[_743] = st[_743];
                         };
                     };
-                    _712.filter = i;
-                    return _712;
+                    _742.filter = i;
+                    return _742;
                 });
             };
         };
@@ -1114,15 +1334,15 @@ PS.Main = (function () {
         return function (y) {
             return !Prelude["=="](eqFilter)(x)(y);
         };
-    }, function (_669) {
-        return function (_670) {
-            if (_669 instanceof All && _670 instanceof All) {
+    }, function (_674) {
+        return function (_675) {
+            if (_674 instanceof All && _675 instanceof All) {
                 return true;
             };
-            if (_669 instanceof Active && _670 instanceof Active) {
+            if (_674 instanceof Active && _675 instanceof Active) {
                 return true;
             };
-            if (_669 instanceof Completed && _670 instanceof Completed) {
+            if (_674 instanceof Completed && _675 instanceof Completed) {
                 return true;
             };
             return false;
@@ -1132,62 +1352,62 @@ PS.Main = (function () {
         return function (f) {
             return function (st) {
                 return Prelude["<#>"](__dict_Functor_718)(f(st.editText))(function (i) {
-                    var _716 = {};
-                    for (var _717 in st) {
-                        if (st.hasOwnProperty(_717)) {
-                            _716[_717] = st[_717];
+                    var _746 = {};
+                    for (var _747 in st) {
+                        if (st.hasOwnProperty(_747)) {
+                            _746[_747] = st[_747];
                         };
                     };
-                    _716.editText = i;
-                    return _716;
+                    _746.editText = i;
+                    return _746;
                 });
             };
         };
     };
-    var applyFilter = function (_662) {
-        return function (_663) {
-            if (_662 instanceof All) {
+    var applyFilter = function (_667) {
+        return function (_668) {
+            if (_667 instanceof All) {
                 return true;
             };
-            if (_662 instanceof Active) {
-                return !_663.value1;
+            if (_667 instanceof Active) {
+                return !_668.value1;
             };
-            if (_662 instanceof Completed) {
-                return _663.value1;
+            if (_667 instanceof Completed) {
+                return _668.value1;
             };
             throw new Error("Failed pattern match");
         };
     };
-    var render = function (_664) {
-        return function (_665) {
-            return function (_666) {
+    var render = function (_669) {
+        return function (_670) {
+            return function (_671) {
                 var title = Thermite_Html_Elements.h1([ Thermite_Html_Attributes.className("title") ])([ Thermite_Html.text("todos") ]);
-                var newItem = Thermite_Html_Elements.li([ Thermite_Html_Attributes.className("newItem") ])([ Thermite_Html_Elements.input([ Thermite_Html_Attributes.placeholder("Create a new task"), Thermite_Html_Attributes.value(_665.value0.editText), Thermite_Events.onKeyUp(_664)(handleKeyPress), Thermite_Events.onChange(_664)(handleChangeEvent) ])([  ]) ]);
-                var item = function (_671) {
+                var newItem = Thermite_Html_Elements.li([ Thermite_Html_Attributes.className("newItem") ])([ Thermite_Html_Elements.input([ Thermite_Html_Attributes.placeholder("Create a new task"), Thermite_Html_Attributes.value(_670.value0.editText), Thermite_Events.onKeyUp(_669)(handleKeyPress), Thermite_Events.onChange(_669)(handleChangeEvent) ])([  ]) ]);
+                var item = function (_676) {
                     return Thermite_Html_Elements["li'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("checkbox"), Thermite_Html_Attributes.className("completed"), Thermite_Html_Attributes.checked((function () {
-                        if (_671.value0.value1) {
+                        if (_676.value0.value1) {
                             return "checked";
                         };
-                        if (!_671.value0.value1) {
+                        if (!_676.value0.value1) {
                             return "";
                         };
                         throw new Error("Failed pattern match");
-                    })()), Thermite_Html_Attributes.title("Mark as completed"), Thermite_Events.onChange(_664)(handleCheckEvent(_671.value1)) ])([  ]), Thermite_Html_Elements.span([ Thermite_Html_Attributes.className("description") ])([ Thermite_Html.text(_671.value0.value0) ]), Thermite_Html_Elements.button([ Thermite_Html_Attributes.className("complete"), Thermite_Html_Attributes.title("Remove item"), Thermite_Events.onClick(_664)(function (_) {
-                        return new RemoveItem(_671.value1);
+                    })()), Thermite_Html_Attributes.title("Mark as completed"), Thermite_Events.onChange(_669)(handleCheckEvent(_676.value1)) ])([  ]), Thermite_Html_Elements.span([ Thermite_Html_Attributes.className("description") ])([ Thermite_Html.text(_676.value0.value0) ]), Thermite_Html_Elements.button([ Thermite_Html_Attributes.className("complete"), Thermite_Html_Attributes.title("Remove item"), Thermite_Events.onClick(_669)(function (_) {
+                        return new RemoveItem(_676.value1);
                     }) ])([ Thermite_Html.text("\u2716") ]) ]);
                 };
-                var items_1 = Thermite_Html_Elements.ul([ Thermite_Html_Attributes.className("items") ])(Prelude[":"](newItem)(Prelude["<<<"](Prelude.semigroupoidArr)(Data_Array.map(item))(Data_Array.filter(Prelude["<<<"](Prelude.semigroupoidArr)(applyFilter(_665.value0.filter))(Data_Tuple.fst)))(Data_Tuple.zip(_665.value0.items)(Data_Array.range(0)(Data_Array.length(_665.value0.items))))));
+                var items_1 = Thermite_Html_Elements.ul([ Thermite_Html_Attributes.className("items") ])(Prelude[":"](newItem)(Prelude["<<<"](Prelude.semigroupoidArr)(Data_Array.map(item))(Data_Array.filter(Prelude["<<<"](Prelude.semigroupoidArr)(applyFilter(_670.value0.filter))(Data_Tuple.fst)))(Data_Tuple.zip(_670.value0.items)(Data_Array.range(0)(Data_Array.length(_670.value0.items))))));
                 var filter__1 = function (f) {
                     return Thermite_Html_Elements.li([  ])([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("#"), Thermite_Html_Attributes.className((function () {
-                        var _733 = Prelude["=="](eqFilter)(f)(_665.value0.filter);
-                        if (_733) {
+                        var _763 = Prelude["=="](eqFilter)(f)(_670.value0.filter);
+                        if (_763) {
                             return "selected";
                         };
-                        if (!_733) {
+                        if (!_763) {
                             return "";
                         };
                         throw new Error("Failed pattern match");
-                    })()), Thermite_Events.onClick(_664)(function (_) {
+                    })()), Thermite_Events.onClick(_669)(function (_) {
                         return new SetFilter(f);
                     }) ])([ Thermite_Html.text(showFilter(f)) ]) ]);
                 };
@@ -1197,40 +1417,40 @@ PS.Main = (function () {
         };
     };
     var _State = function (__dict_Functor_719) {
-        return function (_658) {
-            return function (_659) {
-                return Prelude["<$>"](__dict_Functor_719)(State.create)(_658(_659.value0));
+        return function (_663) {
+            return function (_664) {
+                return Prelude["<$>"](__dict_Functor_719)(State.create)(_663(_664.value0));
             };
         };
     };
-    var performAction = function (_667) {
-        return function (_668) {
-            var updateState = function (_672) {
-                if (_672 instanceof NewItem) {
+    var performAction = function (_672) {
+        return function (_673) {
+            var updateState = function (_677) {
+                if (_677 instanceof NewItem) {
                     return function (st) {
-                        return Optic_Extended["#~"](st)(Prelude[">>="](Control_Monad_State_Trans.bindStateT(Data_Identity.monadIdentity))(Optic_Extended["++="](Control_Monad_State_Trans.monadStateT(Data_Identity.monadIdentity))(Control_Monad_State_Class.monadStateStateT(Data_Identity.monadIdentity))(Data_Array.semigroupArray)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))([ new Item(_672.value0, false) ]))(function () {
+                        return Optic_Extended["#~"](st)(Prelude[">>="](Control_Monad_State_Trans.bindStateT(Data_Identity.monadIdentity))(Optic_Extended["++="](Control_Monad_State_Trans.monadStateT(Data_Identity.monadIdentity))(Control_Monad_State_Class.monadStateStateT(Data_Identity.monadIdentity))(Data_Array.semigroupArray)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))([ new Item(_677.value0, false) ]))(function () {
                             return Optic_Extended[".="](Control_Monad_State_Trans.monadStateT(Data_Identity.monadIdentity))(Control_Monad_State_Class.monadStateStateT(Data_Identity.monadIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(editText(Data_Identity.functorIdentity)))("");
                         }));
                     };
                 };
-                if (_672 instanceof RemoveItem) {
-                    return Optic_Setter.over(Data_Profunctor.profunctorArr)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))(Data_Array.deleteAt(_672.value0)(1));
+                if (_677 instanceof RemoveItem) {
+                    return Optic_Setter.over(Data_Profunctor.profunctorArr)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))(Data_Array.deleteAt(_677.value0)(1));
                 };
-                if (_672 instanceof SetEditText) {
-                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(editText(Data_Identity.functorIdentity)))(_672.value0);
+                if (_677 instanceof SetEditText) {
+                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(editText(Data_Identity.functorIdentity)))(_677.value0);
                 };
-                if (_672 instanceof SetCompleted) {
-                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(items(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(Optic_Index.ix(Optic_Index.indexArray)(_672.value0)(Data_Identity.applicativeIdentity))(itemBoolean(Data_Identity.functorIdentity)))))(_672.value1);
+                if (_677 instanceof SetCompleted) {
+                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(items(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(Optic_Index.ix(Optic_Index.indexArray)(_677.value0)(Data_Identity.applicativeIdentity))(itemBoolean(Data_Identity.functorIdentity)))))(_677.value1);
                 };
-                if (_672 instanceof SetFilter) {
-                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(filter_(Data_Identity.functorIdentity)))(_672.value0);
+                if (_677 instanceof SetFilter) {
+                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(filter_(Data_Identity.functorIdentity)))(_677.value0);
                 };
-                if (_672 instanceof DoNothing) {
+                if (_677 instanceof DoNothing) {
                     return Prelude.id(Prelude.categoryArr);
                 };
                 throw new Error("Failed pattern match");
             };
-            return Thermite_Action.modifyState(updateState(_668));
+            return Thermite_Action.modifyState(updateState(_673));
         };
     };
     var spec = {

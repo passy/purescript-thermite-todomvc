@@ -16,6 +16,7 @@ import qualified Thermite.Html.Elements as T
 import qualified Thermite.Html.Attributes as A
 import qualified Thermite.Events as T
 import qualified Thermite.Action as T
+import qualified Thermite.Types as T
 
 type Index = Number
 
@@ -143,7 +144,7 @@ render ctx (State st) _ =
                             ] [ T.text (showFilter f) ]
                       ]
 
-performAction :: T.PerformAction State _ Action _
+performAction :: T.PerformAction _ Action (T.Action _ State)
 performAction _ action = T.modifyState (updateState action)
   where
   updateState :: Action -> State -> State
