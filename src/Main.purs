@@ -100,8 +100,8 @@ applyFilter All       _ = true
 applyFilter Active    (Item _ b) = not b
 applyFilter Completed (Item _ b) = b
 
-render :: T.Render State _ Action
-render ctx (State st) _ =
+render :: T.Render _ State _ Action
+render ctx (State st) _ _ =
   T.div (A.className "container") [ title, filters, items ]
   where
   title :: T.Html _
@@ -153,7 +153,7 @@ render ctx (State st) _ =
                        )
                        [ T.text (showFilter f) ]
 
-performAction :: T.PerformAction _ Action (T.Action _ State)
+performAction :: T.PerformAction _ State _ Action
 performAction _ action = T.modifyState (updateState action)
   where
   updateState :: Action -> State -> State

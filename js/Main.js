@@ -264,8 +264,8 @@ PS.Prelude = (function () {
     var $less = function (__dict_Ord_12) {
         return function (a1) {
             return function (a2) {
-                var _536 = compare(__dict_Ord_12)(a1)(a2);
-                if (_536 instanceof LT) {
+                var _537 = compare(__dict_Ord_12)(a1)(a2);
+                if (_537 instanceof LT) {
                     return true;
                 };
                 return false;
@@ -811,14 +811,14 @@ PS.Optic_Index = (function () {
                         return Prelude.pure(__dict_Applicative_633)([  ]);
                     };
                     if (n === 0 && as.length >= 1) {
-                        var _564 = as.slice(1);
+                        var _565 = as.slice(1);
                         return Prelude["<#>"]((__dict_Applicative_633["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(a2fa(as[0]))(function (a$prime) {
-                            return Prelude[":"](a$prime)(_564);
+                            return Prelude[":"](a$prime)(_565);
                         });
                     };
                     if (as.length >= 1) {
-                        var _566 = as.slice(1);
-                        return Prelude["<$>"]((__dict_Applicative_633["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"](as[0]))(ix(indexArray)(n - 1)(__dict_Applicative_633)(a2fa)(_566));
+                        var _567 = as.slice(1);
+                        return Prelude["<$>"]((__dict_Applicative_633["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"](as[0]))(ix(indexArray)(n - 1)(__dict_Applicative_633)(a2fa)(_567));
                     };
                     throw new Error("Failed pattern match");
                 };
@@ -967,15 +967,11 @@ PS.Thermite_Types = (function () {
     };
   }
   ;
-    var Spec = function (x) {
-        return x;
-    };
     var semigroupAttr = new Prelude.Semigroup(appendAttr);
     var monoidAttr = new Data_Monoid.Monoid(function () {
         return semigroupAttr;
     }, emptyAttr);
     return {
-        Spec: Spec, 
         semigroupAttr: semigroupAttr, 
         monoidAttr: monoidAttr
     };
@@ -1010,10 +1006,10 @@ PS.Thermite_Internal = (function () {
   }
   ;
     
-  function createElementImpl(name) {
-    return function(attr) {
+  function createElementImpl(element) {
+    return function(props) {
       return function(children) {
-        return React.createElement(name, attr, children);
+        return React.createElement(element, props, children);
       };
     };
   }
@@ -1041,34 +1037,6 @@ PS.Thermite_Internal = (function () {
   }
   ;
     
-  function createClassImpl(runAction) {
-    return function(maybe) {
-      return function(spec) {
-        return React.createClass({
-          getInitialState: function() {
-            return spec.initialState;
-          },
-          performAction: function(action) {
-            runAction(this)(spec.performAction(this.props)(action))();
-          },
-          render: function() {
-            return spec.render(this)(this.state)(this.props);
-          },
-          componentWillMount: function() {
-            var self = this;
-            maybe(function() { })(function(action) {
-              return function() {
-                self.performAction(action);
-              };
-            })(spec.componentWillMount)();
-          },
-          displayName: maybe(undefined)(function(a) { return a; })(spec.displayName)
-        })
-      };
-    };
-  }
-  ;
-    
   function documentBody(component) {
     return document.body;
   }
@@ -1087,7 +1055,6 @@ PS.Thermite_Internal = (function () {
     return {
         renderToImpl: renderToImpl, 
         documentBody: documentBody, 
-        createClassImpl: createClassImpl, 
         event: event, 
         unsafeAttribute: unsafeAttribute, 
         createElementImpl: createElementImpl, 
@@ -1278,14 +1245,18 @@ PS.Thermite_Html = (function () {
 var PS = PS || {};
 PS.Thermite = (function () {
     "use strict";
-    var Thermite_Internal = PS.Thermite_Internal;
     var Thermite_Action = PS.Thermite_Action;
     var Data_Maybe = PS.Data_Maybe;
     var Prelude = PS.Prelude;
+    var Thermite_Internal = PS.Thermite_Internal;
     var DOM = PS.DOM;
     var Control_Monad_Eff = PS.Control_Monad_Eff;
     var Thermite_Html = PS.Thermite_Html;
     var Thermite_Types = PS.Thermite_Types;
+    function createClassImpl(runAction) {  return function(maybe) {    return function(spec) {      return React.createClass({        getInitialState: function() {          return spec.initialState;        },        performAction: function(action) {          runAction(this)(spec.performAction(this.props)(action))();        },        render: function() {          var children = Array.isArray(this.props.children) ? this.props.children : [this.props.children];          return spec.render(this)(this.state)(this.props)(children);        },        componentWillMount: function() {          var self = this;          maybe(function() { })(function(action) {            return function() {              self.performAction(action);            };          })(spec.componentWillMount)();        },        displayName: maybe(undefined)(function(a) { return a; })(spec.displayName)      })    };  };};
+    var Spec = function (x) {
+        return x;
+    };
     var simpleSpec = function (initialState) {
         return function (performAction) {
             return function (render_1) {
@@ -1308,7 +1279,7 @@ PS.Thermite = (function () {
             };
         };
     };
-    var createClass = Thermite_Internal.createClassImpl(Thermite_Action.runAction)(Data_Maybe.maybe);
+    var createClass = createClassImpl(Thermite_Action.runAction)(Data_Maybe.maybe);
     return {
         renderTo: renderTo, 
         render: render, 
@@ -1515,14 +1486,14 @@ PS.Main = (function () {
         return function (f) {
             return function (st) {
                 return Prelude["<#>"](__dict_Functor_726)(f(st.items))(function (i) {
-                    var _594 = {};
-                    for (var _595 in st) {
-                        if (st.hasOwnProperty(_595)) {
-                            _594[_595] = st[_595];
+                    var _595 = {};
+                    for (var _596 in st) {
+                        if (st.hasOwnProperty(_596)) {
+                            _595[_596] = st[_596];
                         };
                     };
-                    _594.items = i;
-                    return _594;
+                    _595.items = i;
+                    return _595;
                 });
             };
         };
@@ -1540,11 +1511,11 @@ PS.Main = (function () {
         filter: All.value
     });
     var handleKeyPress = function (e) {
-        var _600 = getKeyCode(e);
-        if (_600 === 13) {
+        var _601 = getKeyCode(e);
+        if (_601 === 13) {
             return NewItem.create(getValue(e));
         };
-        if (_600 === 27) {
+        if (_601 === 27) {
             return new SetEditText("");
         };
         return DoNothing.value;
@@ -1561,14 +1532,14 @@ PS.Main = (function () {
         return function (f) {
             return function (st) {
                 return Prelude["<#>"](__dict_Functor_728)(f(st.filter))(function (i) {
-                    var _601 = {};
-                    for (var _602 in st) {
-                        if (st.hasOwnProperty(_602)) {
-                            _601[_602] = st[_602];
+                    var _602 = {};
+                    for (var _603 in st) {
+                        if (st.hasOwnProperty(_603)) {
+                            _602[_603] = st[_603];
                         };
                     };
-                    _601.filter = i;
-                    return _601;
+                    _602.filter = i;
+                    return _602;
                 });
             };
         };
@@ -1577,15 +1548,15 @@ PS.Main = (function () {
         return function (y) {
             return !Prelude["=="](eqFilter)(x)(y);
         };
-    }, function (_529) {
-        return function (_530) {
-            if (_529 instanceof All && _530 instanceof All) {
+    }, function (_530) {
+        return function (_531) {
+            if (_530 instanceof All && _531 instanceof All) {
                 return true;
             };
-            if (_529 instanceof Active && _530 instanceof Active) {
+            if (_530 instanceof Active && _531 instanceof Active) {
                 return true;
             };
-            if (_529 instanceof Completed && _530 instanceof Completed) {
+            if (_530 instanceof Completed && _531 instanceof Completed) {
                 return true;
             };
             return false;
@@ -1595,14 +1566,14 @@ PS.Main = (function () {
         return function (f) {
             return function (st) {
                 return Prelude["<#>"](__dict_Functor_729)(f(st.editText))(function (i) {
-                    var _605 = {};
-                    for (var _606 in st) {
-                        if (st.hasOwnProperty(_606)) {
-                            _605[_606] = st[_606];
+                    var _606 = {};
+                    for (var _607 in st) {
+                        if (st.hasOwnProperty(_607)) {
+                            _606[_607] = st[_607];
                         };
                     };
-                    _605.editText = i;
-                    return _605;
+                    _606.editText = i;
+                    return _606;
                 });
             };
         };
@@ -1624,38 +1595,40 @@ PS.Main = (function () {
     var render = function (ctx) {
         return function (_526) {
             return function (_527) {
-                var title = Thermite_Html_Elements["h1'"]([ Thermite_Html.text("todos") ]);
-                var newItem = Thermite_Html_Elements["tr'"]([ Thermite_Html_Elements["td'"]([  ]), Thermite_Html_Elements["td'"]([ Thermite_Html_Elements.input(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className("form-control"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.placeholder("Create a new task"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.value(_526.value0.editText))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Events.onKeyUp(ctx)(handleKeyPress))(Thermite_Events.onChange(ctx)(handleChangeEvent))))))([  ]) ]), Thermite_Html_Elements["td'"]([  ]) ]);
-                var item = function (_531) {
-                    return Prelude["<<<"](Prelude.semigroupoidArr)(Thermite_Html_Elements["tr'"])(Data_Array.map(Prelude["<<<"](Prelude.semigroupoidArr)(Thermite_Html_Elements["td'"])(Prelude.pure(Data_Array.applicativeArray))))([ Thermite_Html_Elements.input(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes._type("checkbox"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className("checkbox"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.checked((function () {
-                        if (_531.value0.value1) {
-                            return "checked";
-                        };
-                        if (!_531.value0.value1) {
-                            return "";
-                        };
-                        throw new Error("Failed pattern match");
-                    })()))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.title("Mark as completed"))(Thermite_Events.onChange(ctx)(handleCheckEvent(_531.value1)))))))([  ]), Thermite_Html.text(_531.value0.value0), Thermite_Html_Elements.button(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className("btn btn-danger pull-right"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.title("Remove item"))(Thermite_Events.onClick(ctx)(function (_519) {
-                        return new RemoveItem(_531.value1);
-                    }))))([ Thermite_Html.text("\u2716") ]) ]);
+                return function (_528) {
+                    var title = Thermite_Html_Elements["h1'"]([ Thermite_Html.text("todos") ]);
+                    var newItem = Thermite_Html_Elements["tr'"]([ Thermite_Html_Elements["td'"]([  ]), Thermite_Html_Elements["td'"]([ Thermite_Html_Elements.input(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className("form-control"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.placeholder("Create a new task"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.value(_526.value0.editText))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Events.onKeyUp(ctx)(handleKeyPress))(Thermite_Events.onChange(ctx)(handleChangeEvent))))))([  ]) ]), Thermite_Html_Elements["td'"]([  ]) ]);
+                    var item = function (_532) {
+                        return Prelude["<<<"](Prelude.semigroupoidArr)(Thermite_Html_Elements["tr'"])(Data_Array.map(Prelude["<<<"](Prelude.semigroupoidArr)(Thermite_Html_Elements["td'"])(Prelude.pure(Data_Array.applicativeArray))))([ Thermite_Html_Elements.input(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes._type("checkbox"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className("checkbox"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.checked((function () {
+                            if (_532.value0.value1) {
+                                return "checked";
+                            };
+                            if (!_532.value0.value1) {
+                                return "";
+                            };
+                            throw new Error("Failed pattern match");
+                        })()))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.title("Mark as completed"))(Thermite_Events.onChange(ctx)(handleCheckEvent(_532.value1)))))))([  ]), Thermite_Html.text(_532.value0.value0), Thermite_Html_Elements.button(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className("btn btn-danger pull-right"))(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.title("Remove item"))(Thermite_Events.onClick(ctx)(function (_519) {
+                            return new RemoveItem(_532.value1);
+                        }))))([ Thermite_Html.text("\u2716") ]) ]);
+                    };
+                    var items_1 = Thermite_Html_Elements.table(Thermite_Html_Attributes.className("table table-striped"))([ Thermite_Html_Elements["thead'"]([ Thermite_Html_Elements.th(Thermite_Html_Attributes.className("col-md-1"))([  ]), Thermite_Html_Elements.th(Thermite_Html_Attributes.className("col-md-10"))([ Thermite_Html.text("Description") ]), Thermite_Html_Elements.th(Thermite_Html_Attributes.className("col-md-1"))([  ]) ]), Thermite_Html_Elements["tbody'"](Prelude[":"](newItem)(Prelude["<<<"](Prelude.semigroupoidArr)(Data_Array.map(item))(Data_Array.filter(Prelude["<<<"](Prelude.semigroupoidArr)(applyFilter(_526.value0.filter))(Data_Tuple.fst)))(Data_Tuple.zip(_526.value0.items)(Data_Array.range(0)(Data_Array.length(_526.value0.items)))))) ]);
+                    var filter__1 = function (f) {
+                        return Thermite_Html_Elements.button(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className((function () {
+                            var _625 = Prelude["=="](eqFilter)(f)(_526.value0.filter);
+                            if (_625) {
+                                return "btn active";
+                            };
+                            if (!_625) {
+                                return "btn";
+                            };
+                            throw new Error("Failed pattern match");
+                        })()))(Thermite_Events.onClick(ctx)(function (_520) {
+                            return new SetFilter(f);
+                        })))([ Thermite_Html.text(showFilter(f)) ]);
+                    };
+                    var filters = Thermite_Html_Elements.div(Thermite_Html_Attributes.className("btn-group"))(Prelude["<$>"](Data_Array.functorArray)(filter__1)([ All.value, Active.value, Completed.value ]));
+                    return Thermite_Html_Elements.div(Thermite_Html_Attributes.className("container"))([ title, filters, items_1 ]);
                 };
-                var items_1 = Thermite_Html_Elements.table(Thermite_Html_Attributes.className("table table-striped"))([ Thermite_Html_Elements["thead'"]([ Thermite_Html_Elements.th(Thermite_Html_Attributes.className("col-md-1"))([  ]), Thermite_Html_Elements.th(Thermite_Html_Attributes.className("col-md-10"))([ Thermite_Html.text("Description") ]), Thermite_Html_Elements.th(Thermite_Html_Attributes.className("col-md-1"))([  ]) ]), Thermite_Html_Elements["tbody'"](Prelude[":"](newItem)(Prelude["<<<"](Prelude.semigroupoidArr)(Data_Array.map(item))(Data_Array.filter(Prelude["<<<"](Prelude.semigroupoidArr)(applyFilter(_526.value0.filter))(Data_Tuple.fst)))(Data_Tuple.zip(_526.value0.items)(Data_Array.range(0)(Data_Array.length(_526.value0.items)))))) ]);
-                var filter__1 = function (f) {
-                    return Thermite_Html_Elements.button(Prelude["<>"](Thermite_Types.semigroupAttr)(Thermite_Html_Attributes.className((function () {
-                        var _623 = Prelude["=="](eqFilter)(f)(_526.value0.filter);
-                        if (_623) {
-                            return "btn active";
-                        };
-                        if (!_623) {
-                            return "btn";
-                        };
-                        throw new Error("Failed pattern match");
-                    })()))(Thermite_Events.onClick(ctx)(function (_520) {
-                        return new SetFilter(f);
-                    })))([ Thermite_Html.text(showFilter(f)) ]);
-                };
-                var filters = Thermite_Html_Elements.div(Thermite_Html_Attributes.className("btn-group"))(Prelude["<$>"](Data_Array.functorArray)(filter__1)([ All.value, Active.value, Completed.value ]));
-                return Thermite_Html_Elements.div(Thermite_Html_Attributes.className("container"))([ title, filters, items_1 ]);
             };
         };
     };
@@ -1666,29 +1639,29 @@ PS.Main = (function () {
             };
         };
     };
-    var performAction = function (_528) {
+    var performAction = function (_529) {
         return function (action) {
-            var updateState = function (_532) {
-                if (_532 instanceof NewItem) {
+            var updateState = function (_533) {
+                if (_533 instanceof NewItem) {
                     return function (st) {
-                        return Optic_Extended["#~"](st)(Prelude[">>="](Control_Monad_State_Trans.bindStateT(Data_Identity.monadIdentity))(Optic_Extended["++="](Control_Monad_State_Trans.monadStateT(Data_Identity.monadIdentity))(Control_Monad_State_Class.monadStateStateT(Data_Identity.monadIdentity))(Data_Array.semigroupArray)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))([ new Item(_532.value0, false) ]))(function () {
+                        return Optic_Extended["#~"](st)(Prelude[">>="](Control_Monad_State_Trans.bindStateT(Data_Identity.monadIdentity))(Optic_Extended["++="](Control_Monad_State_Trans.monadStateT(Data_Identity.monadIdentity))(Control_Monad_State_Class.monadStateStateT(Data_Identity.monadIdentity))(Data_Array.semigroupArray)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))([ new Item(_533.value0, false) ]))(function () {
                             return Optic_Extended[".="](Control_Monad_State_Trans.monadStateT(Data_Identity.monadIdentity))(Control_Monad_State_Class.monadStateStateT(Data_Identity.monadIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(editText(Data_Identity.functorIdentity)))("");
                         }));
                     };
                 };
-                if (_532 instanceof RemoveItem) {
-                    return Optic_Setter.over(Data_Profunctor.profunctorArr)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))(Data_Array.deleteAt(_532.value0)(1));
+                if (_533 instanceof RemoveItem) {
+                    return Optic_Setter.over(Data_Profunctor.profunctorArr)(Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(items(Data_Identity.functorIdentity)))(Data_Array.deleteAt(_533.value0)(1));
                 };
-                if (_532 instanceof SetEditText) {
-                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(editText(Data_Identity.functorIdentity)))(_532.value0);
+                if (_533 instanceof SetEditText) {
+                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(editText(Data_Identity.functorIdentity)))(_533.value0);
                 };
-                if (_532 instanceof SetCompleted) {
-                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(items(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(Optic_Index.ix(Optic_Index.indexArray)(_532.value0)(Data_Identity.applicativeIdentity))(itemBoolean(Data_Identity.functorIdentity)))))(_532.value1);
+                if (_533 instanceof SetCompleted) {
+                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(items(Data_Identity.functorIdentity))(Optic_Core[".."](Prelude.semigroupoidArr)(Optic_Index.ix(Optic_Index.indexArray)(_533.value0)(Data_Identity.applicativeIdentity))(itemBoolean(Data_Identity.functorIdentity)))))(_533.value1);
                 };
-                if (_532 instanceof SetFilter) {
-                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(filter_(Data_Identity.functorIdentity)))(_532.value0);
+                if (_533 instanceof SetFilter) {
+                    return Optic_Core[".~"](Optic_Core[".."](Prelude.semigroupoidArr)(_State(Data_Identity.functorIdentity))(filter_(Data_Identity.functorIdentity)))(_533.value0);
                 };
-                if (_532 instanceof DoNothing) {
+                if (_533 instanceof DoNothing) {
                     return Prelude.id(Prelude.categoryArr);
                 };
                 throw new Error("Failed pattern match");
