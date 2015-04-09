@@ -102,47 +102,56 @@ applyFilter Completed (Item _ b) = b
 
 render :: T.Render State _ Action
 render ctx (State st) _ =
-  T.div [ A.className "body" ] [ title, items, filters ]
+  T.div (A.className "container") [ title, filters, items ]
   where
   title :: T.Html _
-  title = T.h1 [ A.className "title" ] [ T.text "todos" ]
+  title = T.h1' [ T.text "todos" ]
 
   items :: T.Html _
-  items = T.ul [ A.className "items" ] (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items)))
+  items = T.table (A.className "table table-striped") 
+                  [ T.thead' [ T.th (A.className "col-md-1") []
+                             , T.th (A.className "col-md-10") [ T.text "Description" ]
+                             , T.th (A.className "col-md-1") [] 
+                             ]
+                  , T.tbody' (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items)))
+                  ]
 
   newItem :: T.Html _
-  newItem = T.li [ A.className "newItem" ]
-                 [ T.input [ A.placeholder "Create a new task"
-                           , A.value st.editText
-                           , T.onKeyUp ctx handleKeyPress
-                           , T.onChange ctx handleChangeEvent
-                           ] []
-                 ]
+  newItem = T.tr' [ T.td' []
+                  , T.td' [ T.input (A.className "form-control"
+                                     <> A.placeholder "Create a new task"
+                                     <> A.value st.editText
+                                     <> T.onKeyUp ctx handleKeyPress
+                                     <> T.onChange ctx handleChangeEvent)
+                                    []
+                          ]
+                  , T.td' []
+                  ]
 
   item :: Tuple Item Index -> T.Html _
   item (Tuple (Item name completed) index) =
-    T.li' [ T.input  [ A._type "checkbox"
-                     , A.className "completed"
-                     , A.checked (if completed then "checked" else "")
-                     , A.title "Mark as completed"
-                     , T.onChange ctx (handleCheckEvent index)
-                     ] []
-          , T.span   [ A.className "description" ] [ T.text name ]
-          , T.button [ A.className "complete"
-                     , A.title "Remove item"
-                     , T.onClick ctx \_ -> RemoveItem index
-                     ] [ T.text "✖" ]
+    T.tr' <<< map (T.td' <<< pure) $ 
+          [ T.input (A._type "checkbox"
+                     <> A.className "checkbox"
+                     <> A.checked (if completed then "checked" else "")
+                     <> A.title "Mark as completed"
+                     <> T.onChange ctx (handleCheckEvent index))
+                    []
+          , T.text name
+          , T.button (A.className "btn btn-danger pull-right"
+                      <> A.title "Remove item"
+                      <> T.onClick ctx \_ -> RemoveItem index)
+                     [ T.text "✖" ]
           ]
 
   filters :: T.Html _
-  filters = T.ul [ A.className "filters" ] (filter_ <$> [All, Active, Completed])
+  filters = T.div (A.className "btn-group") (filter_ <$> [All, Active, Completed])
 
   filter_ :: Filter -> T.Html _
-  filter_ f = T.li [] [ T.a [ A.href "#"
-                            , A.className (if f == st.filter then "selected" else "")
-                            , T.onClick ctx (\_ -> SetFilter f)
-                            ] [ T.text (showFilter f) ]
-                      ]
+  filter_ f = T.button (A.className (if f == st.filter then "btn active" else "btn")
+                        <> T.onClick ctx (\_ -> SetFilter f)
+                       )
+                       [ T.text (showFilter f) ]
 
 performAction :: T.PerformAction _ Action (T.Action _ State)
 performAction _ action = T.modifyState (updateState action)
@@ -157,10 +166,7 @@ performAction _ action = T.modifyState (updateState action)
   updateState DoNothing          = id
 
 spec :: T.Spec _ State _ Action
-spec = T.Spec { initialState: initialState
-              , performAction: performAction
-              , render: render
-              }
+spec = T.simpleSpec initialState performAction render
 
 main = do
   let component = T.createClass spec

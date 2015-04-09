@@ -14,7 +14,7 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-thermite": "~0.4.0",
+    "purescript-thermite": "~0.6.0",
     "purescript-arrays": "~0.3.0",
     "purescript-tuples": "~0.2.3",
     "purescript-index": "~0.1.1",
@@ -31,6 +31,8 @@
     "purescript-identity": "~0.2.0",
     "purescript-distributive": "~0.3.0",
     "purescript-const": "~0.2.0",
-    "purescript-profunctor": "~0.0.2"
+    "purescript-profunctor": "~0.0.2",
+    "purescript-tuples": "~0.3.0",
+    "purescript-monoid": "~0.2.0"
   }
 }
