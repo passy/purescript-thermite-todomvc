@@ -1,14 +1,27 @@
 module Main (main) where
 
-import Data.Array (map, deleteAt, updateAt, filter, length, range)
+import Prelude
+
 import Data.Tuple
+import Data.Maybe (fromMaybe)
+import Data.List ( List(..)
+                 , (:)
+                 , deleteAt
+                 , updateAt
+                 , filter
+                 , fromList
+                 , length
+                 , range
+                 , singleton
+                 , zip
+                 )
 
-import Optic.Core ((..), (.~), LensP())
-import Optic.Extended ((.=), (++=), (#~))
+import Control.Plus (empty)
+
+import Optic.Core
+import Optic.Monad ((#~))
 import Optic.Index (ix)
-import Optic.Setter (over)
-
-import Prelude.Unsafe (unsafeIndex)
+import Optic.Monad.Setter ((.=), (++=))
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -18,7 +31,7 @@ import qualified Thermite.Events as T
 import qualified Thermite.Action as T
 import qualified Thermite.Types as T
 
-type Index = Number
+type Index = Int
 
 data Action
   = NewItem String
@@ -33,11 +46,10 @@ data Item = Item String Boolean
 data Filter = All | Active | Completed
 
 instance eqFilter :: Eq Filter where
-  (==) All       All       = true
-  (==) Active    Active    = true
-  (==) Completed Completed = true
-  (==) _         _         = false
-  (/=) x         y         = not (x == y)
+  eq All       All       = true
+  eq Active    Active    = true
+  eq Completed Completed = true
+  eq _         _         = false
 
 showFilter :: Filter -> String
 showFilter All = "All"
@@ -45,9 +57,9 @@ showFilter Active = "Active"
 showFilter Completed = "Completed"
 
 data State = State
-  { items :: [Item]
-  , editText :: String
-  , filter :: Filter
+  { items       :: List Item
+  , editText    :: String
+  , filter      :: Filter
   }
 
 _State :: LensP State { items :: _, editText :: _, filter :: _ }
@@ -65,20 +77,11 @@ filter_ f st = f st.filter <#> \i -> st { filter = i }
 itemBoolean :: LensP Item Boolean
 itemBoolean f (Item str b) = Item str <$> f b
 
-foreign import getValue
-  "function getValue(e) {\
-  \  return e.target.value;\
-  \}" :: forall event. event -> String
+foreign import getValue :: forall event. event -> String
 
-foreign import getChecked
-  "function getChecked(e) {\
-  \  return e.target.checked;\
-  \}" :: T.FormEvent -> Boolean
+foreign import getChecked :: T.FormEvent -> Boolean
 
-foreign import getKeyCode
-  "function getKeyCode(e) {\
-  \  return e.keyCode;\
-  \}" :: T.KeyboardEvent -> Number
+foreign import getKeyCode :: T.KeyboardEvent -> Int
 
 handleKeyPress :: T.KeyboardEvent -> Action
 handleKeyPress e = case getKeyCode e of
@@ -93,7 +96,7 @@ handleCheckEvent :: Index -> T.FormEvent -> Action
 handleCheckEvent index e = SetCompleted index (getChecked e)
 
 initialState :: State
-initialState = State { items: [], editText: "", filter: All }
+initialState = State { items: empty, editText: "", filter: All }
 
 applyFilter :: Filter -> Item -> Boolean
 applyFilter All       _ = true
@@ -113,7 +116,7 @@ render ctx (State st) _ _ =
                              , T.th (A.className "col-md-10") [ T.text "Description" ]
                              , T.th (A.className "col-md-1") [] 
                              ]
-                  , T.tbody' (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items)))
+                  , T.tbody' (fromList (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items))))
                   ]
 
   newItem :: T.Html _
@@ -138,17 +141,17 @@ render ctx (State st) _ _ =
                      <> T.onChange ctx (handleCheckEvent index))
                     []
           , T.text name
-          , T.button (A.className "btn btn-danger pull-right"
-                      <> A.title "Remove item"
-                      <> T.onClick ctx \_ -> RemoveItem index)
-                     [ T.text "✖" ]
+          , T.a (A.className "btn btn-danger pull-right"
+                 <> A.title "Remove item"
+                 <> T.onClick ctx \_ -> RemoveItem index)
+                [ T.text "✖" ]
           ]
 
   filters :: T.Html _
   filters = T.div (A.className "btn-group") (filter_ <$> [All, Active, Completed])
 
   filter_ :: Filter -> T.Html _
-  filter_ f = T.button (A.className (if f == st.filter then "btn active" else "btn")
+  filter_ f = T.button (A.className (if f == st.filter then "btn toolbar active" else "btn toolbar")
                         <> T.onClick ctx (\_ -> SetFilter f)
                        )
                        [ T.text (showFilter f) ]
@@ -157,9 +160,9 @@ performAction :: T.PerformAction _ State _ Action
 performAction _ action = T.modifyState (updateState action)
   where
   updateState :: Action -> State -> State
-  updateState (NewItem s)        = \st -> st #~ do _State .. items ++= [Item s false]
+  updateState (NewItem s)        = \st -> st #~ do _State .. items ++= singleton (Item s false)
                                                    _State .. editText .= ""
-  updateState (RemoveItem i)     = over (_State..items) (deleteAt i 1)
+  updateState (RemoveItem i)     = over (_State .. items) (\xs -> fromMaybe xs (deleteAt i xs))
   updateState (SetEditText s)    = _State .. editText .~ s
   updateState (SetCompleted i c) = _State .. items .. ix i .. itemBoolean .~ c
   updateState (SetFilter f)      = _State .. filter_ .~ f
