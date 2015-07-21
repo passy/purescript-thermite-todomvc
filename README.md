@@ -1,4 +1,4 @@
-# purescript-thermite-todomvc
+# purescript-thermite-todomvc 
  
 [Working demo](http://functorial.com/purescript-thermite-todomvc/)
 
