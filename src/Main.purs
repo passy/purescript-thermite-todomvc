@@ -4,6 +4,10 @@ import Prelude
 
 import Data.Tuple
 import Data.Maybe (fromMaybe)
+import Data.Maybe.Unsafe (fromJust)
+import Data.Nullable (toMaybe)
+import Data.Foreign (toForeign)
+import Data.Foreign.Lens
 import Data.List ( List(..)
                  , (:)
                  , deleteAt
@@ -17,6 +21,7 @@ import Data.List ( List(..)
                  )
 
 import Control.Plus (empty)
+import Control.Monad.Eff
 
 import Optic.Core
 import Optic.Monad ((#~))
@@ -24,12 +29,18 @@ import Optic.Index (ix)
 import Optic.Monad.Setter ((.=), (++=))
 
 import qualified Thermite as T
-import qualified Thermite.Html as T
-import qualified Thermite.Html.Elements as T
-import qualified Thermite.Html.Attributes as A
-import qualified Thermite.Events as T
 import qualified Thermite.Action as T
-import qualified Thermite.Types as T
+
+import qualified React as R
+import qualified React.DOM as RD
+import qualified React.DOM.Props as RP
+
+import qualified DOM as DOM
+import qualified DOM.HTML as DOM
+import qualified DOM.HTML.Document as DOM
+import qualified DOM.HTML.Types as DOM
+import qualified DOM.HTML.Window as DOM
+import qualified DOM.Node.Types as DOM
 
 type Index = Int
 
@@ -77,22 +88,25 @@ filter_ f st = f st.filter <#> \i -> st { filter = i }
 itemBoolean :: LensP Item Boolean
 itemBoolean f (Item str b) = Item str <$> f b
 
-foreign import getValue :: forall event. event -> String
+getValue :: forall event. event -> String
+getValue = fromMaybe "" <<< get (prop "target" <<< prop "value" <<< string) <<< toForeign
 
-foreign import getChecked :: T.FormEvent -> Boolean
+getChecked :: forall event. event -> Boolean
+getChecked = fromMaybe false <<< get (prop "target" <<< prop "checked" <<< boolean) <<< toForeign
 
-foreign import getKeyCode :: T.KeyboardEvent -> Int
+getKeyCode :: forall event. event -> Int
+getKeyCode = fromMaybe 0 <<< get (prop "keyCode" <<< int) <<< toForeign
 
-handleKeyPress :: T.KeyboardEvent -> Action
+handleKeyPress :: forall event. event -> Action
 handleKeyPress e = case getKeyCode e of
                      13 -> NewItem $ getValue e
                      27 -> SetEditText ""
                      _  -> DoNothing
 
-handleChangeEvent :: T.FormEvent -> Action
+handleChangeEvent :: forall event. event -> Action
 handleChangeEvent e = SetEditText (getValue e)
 
-handleCheckEvent :: Index -> T.FormEvent -> Action
+handleCheckEvent :: forall event. Index -> event -> Action
 handleCheckEvent index e = SetCompleted index (getChecked e)
 
 initialState :: State
@@ -104,57 +118,58 @@ applyFilter Active    (Item _ b) = not b
 applyFilter Completed (Item _ b) = b
 
 render :: T.Render _ State _ Action
-render ctx (State st) _ _ =
-  T.div (A.className "container") [ title, filters, items ]
+render send (State st) _ _ =
+  RD.div [ RP.className "container" ] [ title, filters, items ]
   where
-  title :: T.Html _
-  title = T.h1' [ T.text "todos" ]
+  title :: R.ReactElement
+  title = RD.h1' [ RD.text "todos" ]
 
-  items :: T.Html _
-  items = T.table (A.className "table table-striped") 
-                  [ T.thead' [ T.th (A.className "col-md-1") []
-                             , T.th (A.className "col-md-10") [ T.text "Description" ]
-                             , T.th (A.className "col-md-1") [] 
-                             ]
-                  , T.tbody' (fromList (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items))))
-                  ]
+  items :: R.ReactElement
+  items = RD.table [ RP.className "table table-striped" ]
+                   [ RD.thead' [ RD.th [ RP.className "col-md-1"  ] []
+                               , RD.th [ RP.className "col-md-10" ] [ RD.text "Description" ]
+                               , RD.th [ RP.className "col-md-1"  ] [] 
+                               ]
+                   , RD.tbody' (fromList (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items))))
+                   ]
 
-  newItem :: T.Html _
-  newItem = T.tr' [ T.td' []
-                  , T.td' [ T.input (A.className "form-control"
-                                     <> A.placeholder "Create a new task"
-                                     <> A.value st.editText
-                                     <> T.onKeyUp ctx handleKeyPress
-                                     <> T.onChange ctx handleChangeEvent)
-                                    []
-                          ]
-                  , T.td' []
-                  ]
+  newItem :: R.ReactElement
+  newItem = RD.tr' [ RD.td' []
+                   , RD.td' [ RD.input [ RP.className "form-control"
+                                       , RP.placeholder "Create a new task"
+                                       , RP.value st.editText
+                                       , RP.onKeyUp (send <<< handleKeyPress)
+                                       , RP.onChange (send <<< handleChangeEvent)
+                                       ] []
+                            ]
+                   , RD.td' []
+                   ]
 
-  item :: Tuple Item Index -> T.Html _
+  item :: Tuple Item Index -> R.ReactElement
   item (Tuple (Item name completed) index) =
-    T.tr' <<< map (T.td' <<< pure) $ 
-          [ T.input (A._type "checkbox"
-                     <> A.className "checkbox"
-                     <> A.checked (if completed then "checked" else "")
-                     <> A.title "Mark as completed"
-                     <> T.onChange ctx (handleCheckEvent index))
-                    []
-          , T.text name
-          , T.a (A.className "btn btn-danger pull-right"
-                 <> A.title "Remove item"
-                 <> T.onClick ctx \_ -> RemoveItem index)
-                [ T.text "✖" ]
+    RD.tr' <<< map (RD.td' <<< pure) $ 
+          [ RD.input [ RP._type "checkbox"
+                     , RP.className "checkbox"
+                     , RP.checked (if completed then "checked" else "")
+                     , RP.title "Mark as completed"
+                     , RP.onChange (send <<< handleCheckEvent index)
+                     ] []
+          , RD.text name
+          , RD.a [ RP.className "btn btn-danger pull-right"
+                 , RP.title "Remove item"
+                 , RP.onClick \_ -> send (RemoveItem index)
+                 ] 
+                 [ RD.text "✖" ]
           ]
 
-  filters :: T.Html _
-  filters = T.div (A.className "btn-group") (filter_ <$> [All, Active, Completed])
+  filters :: R.ReactElement
+  filters = RD.div [ RP.className "btn-group" ] (filter_ <$> [All, Active, Completed])
 
-  filter_ :: Filter -> T.Html _
-  filter_ f = T.button (A.className (if f == st.filter then "btn toolbar active" else "btn toolbar")
-                        <> T.onClick ctx (\_ -> SetFilter f)
-                       )
-                       [ T.text (showFilter f) ]
+  filter_ :: Filter -> R.ReactElement
+  filter_ f = RD.button [ RP.className (if f == st.filter then "btn toolbar active" else "btn toolbar")
+                        , RP.onClick \_ -> send (SetFilter f)
+                        ]
+                        [ RD.text (showFilter f) ]
 
 performAction :: T.PerformAction _ State _ Action
 performAction _ action = T.modifyState (updateState action)
@@ -173,4 +188,12 @@ spec = T.simpleSpec initialState performAction render
 
 main = do
   let component = T.createClass spec
-  T.render component {}
+  body >>= R.render (R.createFactory component {}) 
+  
+  where
+  body :: forall eff. Eff (dom :: DOM.DOM | eff) DOM.Element
+  body = do
+    win <- DOM.window
+    doc <- DOM.document win
+    elm <- fromJust <$> toMaybe <$> DOM.body doc
+    return $ DOM.htmlElementToElement elm
