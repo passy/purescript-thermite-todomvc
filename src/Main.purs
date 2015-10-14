@@ -22,6 +22,7 @@ import Data.List ( List(..)
 
 import Control.Plus (empty)
 import Control.Monad.Eff
+import Control.Monad.Eff.Class
 
 import Optic.Core
 import Optic.Monad ((#~))
@@ -29,7 +30,6 @@ import Optic.Index (ix)
 import Optic.Monad.Setter ((.=), (++=))
 
 import qualified Thermite as T
-import qualified Thermite.Action as T
 
 import qualified React as R
 import qualified React.DOM as RD
@@ -118,8 +118,8 @@ applyFilter Active    (Item _ b) = not b
 applyFilter Completed (Item _ b) = b
 
 render :: T.Render _ State _ Action
-render send (State st) _ _ =
-  RD.div [ RP.className "container" ] [ title, filters, items ]
+render dispatch _ (State st) _ =
+  [ RD.div [ RP.className "container" ] [ title, filters, items ] ]
   where
   title :: R.ReactElement
   title = RD.h1' [ RD.text "todos" ]
@@ -128,7 +128,7 @@ render send (State st) _ _ =
   items = RD.table [ RP.className "table table-striped" ]
                    [ RD.thead' [ RD.th [ RP.className "col-md-1"  ] []
                                , RD.th [ RP.className "col-md-10" ] [ RD.text "Description" ]
-                               , RD.th [ RP.className "col-md-1"  ] [] 
+                               , RD.th [ RP.className "col-md-1"  ] []
                                ]
                    , RD.tbody' (fromList (newItem : (map item <<< filter (applyFilter st.filter <<< fst) $ zip st.items (range 0 $ length st.items))))
                    ]
@@ -138,8 +138,8 @@ render send (State st) _ _ =
                    , RD.td' [ RD.input [ RP.className "form-control"
                                        , RP.placeholder "Create a new task"
                                        , RP.value st.editText
-                                       , RP.onKeyUp (send <<< handleKeyPress)
-                                       , RP.onChange (send <<< handleChangeEvent)
+                                       , RP.onKeyUp (dispatch <<< handleKeyPress)
+                                       , RP.onChange (dispatch <<< handleChangeEvent)
                                        ] []
                             ]
                    , RD.td' []
@@ -147,18 +147,18 @@ render send (State st) _ _ =
 
   item :: Tuple Item Index -> R.ReactElement
   item (Tuple (Item name completed) index) =
-    RD.tr' <<< map (RD.td' <<< pure) $ 
+    RD.tr' <<< map (RD.td' <<< pure) $
           [ RD.input [ RP._type "checkbox"
                      , RP.className "checkbox"
                      , RP.checked (if completed then "checked" else "")
                      , RP.title "Mark as completed"
-                     , RP.onChange (send <<< handleCheckEvent index)
+                     , RP.onChange (dispatch <<< handleCheckEvent index)
                      ] []
           , RD.text name
           , RD.a [ RP.className "btn btn-danger pull-right"
                  , RP.title "Remove item"
-                 , RP.onClick \_ -> send (RemoveItem index)
-                 ] 
+                 , RP.onClick \_ -> dispatch (RemoveItem index)
+                 ]
                  [ RD.text "✖" ]
           ]
 
@@ -167,29 +167,26 @@ render send (State st) _ _ =
 
   filter_ :: Filter -> R.ReactElement
   filter_ f = RD.button [ RP.className (if f == st.filter then "btn toolbar active" else "btn toolbar")
-                        , RP.onClick \_ -> send (SetFilter f)
+                        , RP.onClick \_ -> dispatch (SetFilter f)
                         ]
                         [ RD.text (showFilter f) ]
 
-performAction :: T.PerformAction _ State _ Action
-performAction _ action = T.modifyState (updateState action)
-  where
-  updateState :: Action -> State -> State
-  updateState (NewItem s)        = \st -> st #~ do _State .. items ++= singleton (Item s false)
-                                                   _State .. editText .= ""
-  updateState (RemoveItem i)     = over (_State .. items) (\xs -> fromMaybe xs (deleteAt i xs))
-  updateState (SetEditText s)    = _State .. editText .~ s
-  updateState (SetCompleted i c) = _State .. items .. ix i .. itemBoolean .~ c
-  updateState (SetFilter f)      = _State .. filter_ .~ f
-  updateState DoNothing          = id
+performAction :: forall eff. T.PerformAction eff State _ Action
+performAction (NewItem s) _ state k        = k $ state #~ do _State .. items ++= singleton (Item s false)
+                                                             _State .. editText .= ""
+performAction (RemoveItem i) _ state k     = k $ over (_State .. items) (\xs -> fromMaybe xs (deleteAt i xs)) state
+performAction (SetEditText s) _ state k    = k $ (_State .. editText .~ s) state
+performAction (SetCompleted i c) _ state k = k $ (_State .. items .. ix i .. itemBoolean .~ c) state
+performAction (SetFilter f) _ state k      = k $ (_State .. filter_ .~ f) state
+performAction DoNothing _ state k              = k state
 
-spec :: T.Spec _ State _ Action
-spec = T.simpleSpec initialState performAction render
+spec :: forall eff. T.Spec (T.ThermiteEffects eff State _) State _ Action
+spec = T.simpleSpec performAction render
 
 main = do
-  let component = T.createClass spec
-  body >>= R.render (R.createFactory component {}) 
-  
+  let component = T.createClass spec initialState
+  body >>= R.render (R.createFactory component {})
+
   where
   body :: forall eff. Eff (dom :: DOM.DOM | eff) DOM.Element
   body = do

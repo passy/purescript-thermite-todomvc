@@ -18,7 +18,7 @@
     "purescript-foreign-lens": "~0.1.0",
     "purescript-index": "~0.4.0",
     "purescript-optic": "~0.8.0",
-    "purescript-thermite": "^0.10.1",
+    "purescript-thermite": "purescript-thermite#0.11",
     "react": "~0.13.0"
   }
 }
